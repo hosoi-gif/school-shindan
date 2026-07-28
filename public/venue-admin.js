@@ -1,5 +1,6 @@
 let venue = null;
 let sharedQuestionCount = 0;
+let sharedCourses = [];
 const VENUE_ID = window.location.pathname.match(/^\/v\/([^\/]+)\/admin/)[1];
 
 function escapeHtmlForDisplay(str){
@@ -82,6 +83,55 @@ function removeBonusChoice(qi, oi){
   renderBonusQuestions();
 }
 
+// ---------- この会場のメンター ----------
+function blankMentor(){
+  return { name:"", photoUrl:"", courseKey: (sharedCourses[0] && sharedCourses[0].key) || "", style:"hot", bio:"" };
+}
+
+function renderMentors(){
+  if(!Array.isArray(venue.mentors)) venue.mentors = [];
+  document.getElementById('mCount').textContent = venue.mentors.length;
+  const list = document.getElementById('mentorsList');
+  const courseOptions = sharedCourses.map(c=>`<option value="${c.key}">${escapeHtmlForDisplay(c.label)}</option>`).join('');
+  list.innerHTML = venue.mentors.map((m, i)=>`
+    <div class="gallery-item">
+      <div class="row2">
+        <div><label>名前</label><input type="text" data-path="mentors.${i}.name"></div>
+        <div><label>写真URL（任意・空欄なら人型アイコン表示）</label><input type="url" data-path="mentors.${i}.photoUrl" placeholder="https://..."></div>
+      </div>
+      <div class="row2">
+        <div>
+          <label>コース</label>
+          <select data-path="mentors.${i}.courseKey">${courseOptions}</select>
+        </div>
+        <div>
+          <label>タイプ</label>
+          <select data-path="mentors.${i}.style">
+            <option value="hot">熱血タイプ</option>
+            <option value="cool">クールタイプ</option>
+          </select>
+        </div>
+      </div>
+      <label>一言紹介</label>
+      <textarea data-path="mentors.${i}.bio"></textarea>
+      <button class="action-btn danger small" style="margin-top:10px;" onclick="removeMentor(${i})">このメンターを削除</button>
+    </div>
+  `).join('');
+  bindInputs(list);
+  list.querySelectorAll('select[data-path]').forEach(sel=>{
+    sel.value = getPath(venue, sel.dataset.path) || sel.querySelector('option').value;
+  });
+}
+function addMentor(){
+  venue.mentors.push(blankMentor());
+  renderMentors();
+}
+function removeMentor(i){
+  if(!confirm('「' + (venue.mentors[i].name || '(名称未設定)') + '」を削除します。よろしいですか？')) return;
+  venue.mentors.splice(i,1);
+  renderMentors();
+}
+
 function copyParticipantUrl(){
   const url = participantUrl();
   navigator.clipboard.writeText(url).then(()=>{
@@ -104,7 +154,9 @@ async function load(){
   const quizConfigData = await quizConfigRes.json();
   venue = venueData.venue;
   if(!Array.isArray(venue.bonusQuestions)) venue.bonusQuestions = [];
+  if(!Array.isArray(venue.mentors)) venue.mentors = [];
   sharedQuestionCount = quizConfigData.config.questions.length;
+  sharedCourses = quizConfigData.config.courses;
 
   document.getElementById('venueTitle').textContent = venue.name + ' の設定';
   document.getElementById('participantUrl').textContent = participantUrl();
@@ -112,13 +164,14 @@ async function load(){
   document.getElementById('mainContent').classList.remove('hidden');
   bindInputs(document.getElementById('mainContent'));
   renderBonusQuestions();
+  renderMentors();
 }
 
 async function saveVenue(){
   const res = await fetch('/api/venues/' + VENUE_ID, {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ name: venue.name, bonusQuestions: venue.bonusQuestions }),
+    body: JSON.stringify({ name: venue.name, bonusQuestions: venue.bonusQuestions, mentors: venue.mentors }),
   });
   const status = document.getElementById('saveStatus');
   if(res.ok){

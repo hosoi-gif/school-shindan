@@ -78,6 +78,13 @@
     <button class="action-btn secondary" onclick="addCourse()">＋ コースを追加</button>
   </div>
 
+  <div class="panel">
+    <h2>メンター紹介（そのほかのメンター・全会場共通・全<span id="mCount"></span>人）</h2>
+    <p class="hint">結果画面に「そのほかのメンター」として表示される、全会場共通のメンター一覧。診断結果のタイプ（コース×熱血/クール）が一致する人だけが表示される。会場だけのメンターは、会場オリジナル設定画面（各会場の設定URL）から登録する。</p>
+    <div id="mentorsList"></div>
+    <button class="action-btn secondary" onclick="addMentor()">＋ メンターを追加</button>
+  </div>
+
   <div class="actions-bar">
     <button class="action-btn" onclick="saveConfig()">この内容を保存する</button>
     <a href="/admin/venues"><button class="action-btn secondary" type="button">会場設定画面へ →</button></a>

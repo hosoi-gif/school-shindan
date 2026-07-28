@@ -30,11 +30,11 @@ app.get('/api/config', requireAdmin, (req, res) => {
 });
 
 app.put('/api/config', requireAdmin, (req, res) => {
-  const { ui, questions, courses } = req.body || {};
+  const { ui, questions, courses, mentors } = req.body || {};
   if (!ui || !Array.isArray(questions) || !Array.isArray(courses)) {
     return res.status(400).json({ ok: false, error: 'invalid_config' });
   }
-  configStore.saveConfig({ ui, questions, courses });
+  configStore.saveConfig({ ui, questions, courses, mentors: Array.isArray(mentors) ? mentors : [] });
   res.json({ ok: true });
 });
 
@@ -63,8 +63,8 @@ app.get('/api/venues/:venueId', (req, res) => {
 });
 
 app.put('/api/venues/:venueId', (req, res) => {
-  const { name, bonusQuestions } = req.body || {};
-  const venue = venueStore.updateVenue(req.params.venueId, { name, bonusQuestions });
+  const { name, bonusQuestions, mentors } = req.body || {};
+  const venue = venueStore.updateVenue(req.params.venueId, { name, bonusQuestions, mentors });
   if (!venue) return res.status(404).json({ ok: false, error: 'venue_not_found' });
   res.json({ ok: true, venue });
 });
@@ -80,6 +80,8 @@ app.get('/api/venues/:venueId/quiz-config', (req, res) => {
       questions: shared.questions,
       courses: shared.courses,
       bonusQuestions: venue.bonusQuestions || [],
+      mentors: shared.mentors || [],
+      venueMentors: venue.mentors || [],
     },
     venueName: venue.name,
   });

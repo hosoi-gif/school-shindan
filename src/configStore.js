@@ -16,7 +16,9 @@ function ensureFile() {
 function loadConfig() {
   ensureFile();
   try {
-    return JSON.parse(fs.readFileSync(CONFIG_FILE, 'utf-8'));
+    const config = JSON.parse(fs.readFileSync(CONFIG_FILE, 'utf-8'));
+    if (!Array.isArray(config.mentors)) config.mentors = [];
+    return config;
   } catch {
     return DEFAULT_CONFIG;
   }

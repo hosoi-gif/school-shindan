@@ -219,8 +219,34 @@ function showResult(){
     galEl.appendChild(card);
   });
 
+  // メンター紹介：診断結果と同じタイプ（コース×熱血/クール）の人だけを、
+  // 「この会場のメンター」「そのほかのメンター」の2つの枠に分けて表示する。
+  renderMentorGroup("venueMentorsWrap", "venueMentorsList", CONFIG.venueMentors, best.key, style);
+  renderMentorGroup("otherMentorsWrap", "otherMentorsList", CONFIG.mentors, best.key, style);
+
   document.getElementById("screen-quiz").classList.add("hidden");
   document.getElementById("screen-result").classList.remove("hidden");
+}
+
+function renderMentorGroup(wrapId, listId, mentors, courseKey, style){
+  const wrap = document.getElementById(wrapId);
+  const listEl = document.getElementById(listId);
+  const matched = (mentors||[]).filter(m => m.courseKey === courseKey && m.style === style);
+  if(matched.length === 0){
+    wrap.classList.add("hidden");
+    listEl.innerHTML = "";
+    return;
+  }
+  wrap.classList.remove("hidden");
+  listEl.innerHTML = matched.map(m => `
+    <div class="mentor-card">
+      <div class="mentor-photo">${m.photoUrl ? `<img src="${escapeHtml(m.photoUrl)}" alt="${escapeHtml(m.name||'')}">` : "🧑"}</div>
+      <div>
+        <p class="mentor-name">${escapeHtml(m.name||"")}</p>
+        <p class="mentor-bio">${escapeHtml(m.bio||"")}</p>
+      </div>
+    </div>
+  `).join('');
 }
 
 function scrollGallery(dir){

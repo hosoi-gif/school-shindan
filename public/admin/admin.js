@@ -173,6 +173,56 @@ function removeCourse(i){
   renderCourses();
 }
 
+// ---------- メンター紹介セクション（そのほかのメンター・全会場共通） ----------
+function blankMentor(){
+  return { name:"", photoUrl:"", courseKey: (config.courses[0] && config.courses[0].key) || "", style:"hot", bio:"" };
+}
+
+function renderMentors(){
+  if(!Array.isArray(config.mentors)) config.mentors = [];
+  document.getElementById('mCount').textContent = config.mentors.length;
+  const list = document.getElementById('mentorsList');
+  const courseOptions = config.courses.map(c=>`<option value="${c.key}">${escapeHtmlForDisplay(c.label)}</option>`).join('');
+  list.innerHTML = config.mentors.map((m, i)=>`
+    <details>
+      <summary>${escapeHtmlForDisplay(m.name || '(未入力)')}</summary>
+      <div class="row2">
+        <div><label>名前</label><input type="text" data-path="mentors.${i}.name"></div>
+        <div><label>写真URL（任意・空欄なら人型アイコン表示）</label><input type="url" data-path="mentors.${i}.photoUrl" placeholder="https://..."></div>
+      </div>
+      <div class="row2">
+        <div>
+          <label>コース</label>
+          <select data-path="mentors.${i}.courseKey">${courseOptions}</select>
+        </div>
+        <div>
+          <label>タイプ</label>
+          <select data-path="mentors.${i}.style">
+            <option value="hot">熱血タイプ</option>
+            <option value="cool">クールタイプ</option>
+          </select>
+        </div>
+      </div>
+      <label>一言紹介</label>
+      <textarea data-path="mentors.${i}.bio"></textarea>
+      <button class="action-btn danger" style="margin-top:10px;" onclick="removeMentor(${i})">このメンターを削除</button>
+    </details>
+  `).join('');
+  bindInputs(list);
+  list.querySelectorAll('select[data-path]').forEach(sel=>{
+    sel.value = getPath(config, sel.dataset.path) || sel.querySelector('option').value;
+  });
+}
+function addMentor(){
+  config.mentors.push(blankMentor());
+  renderMentors();
+}
+function removeMentor(i){
+  if(!confirm('「' + (config.mentors[i].name || '(名称未設定)') + '」を削除します。よろしいですか？')) return;
+  config.mentors.splice(i,1);
+  renderMentors();
+}
+
 function escapeHtmlForDisplay(str){
   return String(str).replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
 }
@@ -181,6 +231,7 @@ function renderAll(){
   bindInputs(document.getElementById('appRoot'));
   renderQuestions();
   renderCourses();
+  renderMentors();
 }
 
 // ---------- サーバーとの読み込み・保存 ----------
@@ -188,13 +239,14 @@ async function loadConfig(){
   const res = await adminFetch('/api/config');
   const data = await res.json();
   config = data.config;
+  if(!Array.isArray(config.mentors)) config.mentors = [];
   renderAll();
 }
 
 async function saveConfig(){
   const res = await adminFetch('/api/config', {
     method: 'PUT',
-    body: JSON.stringify({ ui: config.ui, questions: config.questions, courses: config.courses }),
+    body: JSON.stringify({ ui: config.ui, questions: config.questions, courses: config.courses, mentors: config.mentors }),
   });
   const status = document.getElementById('saveStatus');
   if(res.ok){

@@ -36,11 +36,12 @@ function generateVenueId(existing) {
 }
 
 function listVenues() {
-  return loadVenues().map(({ id, name, createdAt, bonusQuestions }) => ({
+  return loadVenues().map(({ id, name, createdAt, bonusQuestions, mentors }) => ({
     id,
     name,
     createdAt,
     bonusQuestionCount: (bonusQuestions || []).length,
+    mentorCount: (mentors || []).length,
   }));
 }
 
@@ -51,6 +52,7 @@ function createVenue(name) {
     name: (name && name.trim()) || '無題の会場',
     createdAt: new Date().toISOString(),
     bonusQuestions: [],
+    mentors: [],
   };
   venues.push(venue);
   saveVenues(venues);
@@ -58,15 +60,18 @@ function createVenue(name) {
 }
 
 function getVenue(id) {
-  return loadVenues().find((v) => v.id === id) || null;
+  const venue = loadVenues().find((v) => v.id === id) || null;
+  if (venue && !Array.isArray(venue.mentors)) venue.mentors = [];
+  return venue;
 }
 
-function updateVenue(id, { name, bonusQuestions }) {
+function updateVenue(id, { name, bonusQuestions, mentors }) {
   const venues = loadVenues();
   const venue = venues.find((v) => v.id === id);
   if (!venue) return null;
   if (typeof name === 'string' && name.trim()) venue.name = name.trim();
   if (Array.isArray(bonusQuestions)) venue.bonusQuestions = bonusQuestions;
+  if (Array.isArray(mentors)) venue.mentors = mentors;
   saveVenues(venues);
   return venue;
 }
