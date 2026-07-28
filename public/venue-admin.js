@@ -177,8 +177,10 @@ async function saveVenue(){
   if(res.ok){
     status.textContent = '保存しました（' + new Date().toLocaleTimeString('ja-JP') + '）';
     document.getElementById('venueTitle').textContent = venue.name + ' の設定';
+    alert('保存しました！');
   } else {
     status.textContent = '保存に失敗しました';
+    alert('保存に失敗しました。もう一度お試しください。');
   }
 }
 
