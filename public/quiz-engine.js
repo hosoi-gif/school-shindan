@@ -232,12 +232,11 @@ function renderMentorGroup(wrapId, listId, mentors, courseKey, style){
   const wrap = document.getElementById(wrapId);
   const listEl = document.getElementById(listId);
   const matched = (mentors||[]).filter(m => m.courseKey === courseKey && m.style === style);
+  wrap.classList.remove("hidden");
   if(matched.length === 0){
-    wrap.classList.add("hidden");
-    listEl.innerHTML = "";
+    listEl.innerHTML = `<p class="mentor-empty">同じタイプのメンターはまだ登録されていません。気になる人はスタッフに聞いてみてね！</p>`;
     return;
   }
-  wrap.classList.remove("hidden");
   listEl.innerHTML = matched.map(m => `
     <div class="mentor-card">
       <div class="mentor-photo">${m.photoUrl ? `<img src="${escapeHtml(m.photoUrl)}" alt="${escapeHtml(m.name||'')}">` : "🧑"}</div>

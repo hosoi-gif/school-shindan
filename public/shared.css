@@ -121,6 +121,7 @@ p.lead{ color:var(--gray); font-size:14px; line-height:1.7; margin:0 0 24px; }
 .mentor-photo img{ width:100%; height:100%; border-radius:50%; object-fit:cover; }
 .mentor-name{ font-size:13.5px; font-weight:700; color:var(--navy); margin:0 0 2px; }
 .mentor-bio{ font-size:12px; color:var(--gray); margin:0; line-height:1.5; }
+.mentor-empty{ font-size:12.5px; color:var(--gray); background:#FFF8F3; border-radius:14px; padding:14px; margin:0; }
 
 .cta{ background:linear-gradient(135deg,var(--accent),var(--accent-dark)); color:#fff; border-radius:16px; padding:18px; text-align:center; margin-bottom:8px; }
 .cta p{ font-size:14px; line-height:1.7; margin:0 0 4px; }
