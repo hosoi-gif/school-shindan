@@ -42,10 +42,10 @@ function renderQuestions(){
       <summary>Q${i+1}. ${escapeHtmlForDisplay(q.q || '(未入力)')}</summary>
       <label>質問文</label>
       <textarea data-path="questions.${i}.q"></textarea>
-      <div class="row6">
+      <div class="opt-list">
         ${LETTERS.map((L, li)=>`
-          <div>
-            <div class="letter-label">${LETTER_LABELS[L]}</div>
+          <div class="opt-row">
+            <div class="opt-label">${LETTER_LABELS[L]}</div>
             <input type="text" data-path="questions.${i}.opts.${li}">
           </div>`).join('')}
       </div>

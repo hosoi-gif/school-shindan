@@ -145,6 +145,10 @@ input[type=text], input[type=url], input[type=number], input[type=password], tex
 textarea{ resize:vertical; min-height:52px; }
 .hint{ font-size:11px; color:var(--gray); margin:2px 0 0; }
 .row6{ display:grid; grid-template-columns:repeat(6,1fr); gap:6px; }
+.opt-list{ display:flex; flex-direction:column; gap:6px; margin-top:10px; }
+.opt-row{ display:flex; align-items:center; gap:10px; }
+.opt-label{ flex:0 0 84px; font-size:11px; color:var(--gray); font-weight:700; }
+.opt-row input{ flex:1; }
 .row2{ display:grid; grid-template-columns:1fr 1fr; gap:10px; }
 .row3{ display:grid; grid-template-columns:2fr 1fr 1fr; gap:10px; }
 details{ border:1px solid var(--line); border-radius:12px; padding:12px 14px; margin-bottom:12px; background:#FFFDFB; }
