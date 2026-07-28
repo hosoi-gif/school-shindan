@@ -73,12 +73,11 @@ function blankCourse(){
     weights: { R:0,I:0,A:0,S:0,E:0,C:0 },
     hot:  { icon:"⭐", imageUrl:"", name:"", quote:"", desc:"" },
     cool: { icon:"⭐", imageUrl:"", name:"", quote:"", desc:"" },
-    gallery: [
-      { mediaType:"none", mediaUrl:"", icon:"📷", kind:"画像", title:"", caption:"" },
-      { mediaType:"none", mediaUrl:"", icon:"🎬", kind:"動画", title:"", caption:"" },
-      { mediaType:"none", mediaUrl:"", icon:"📷", kind:"画像", title:"", caption:"" }
-    ]
+    gallery: [ blankGalleryItem() ]
   };
+}
+function blankGalleryItem(){
+  return { mediaType:"none", mediaUrl:"", icon:"📷", kind:"画像", title:"", caption:"" };
 }
 
 function renderCourses(){
@@ -130,7 +129,7 @@ function renderCourses(){
         <textarea data-path="courses.${i}.cool.desc"></textarea>
       </div>
 
-      <label style="margin-top:14px;">先輩作品ギャラリー（3件）</label>
+      <label style="margin-top:14px;">先輩作品ギャラリー（全${c.gallery.length}件）</label>
       ${c.gallery.map((g, gi)=>`
         <div class="gallery-item">
           <div class="row3">
@@ -151,8 +150,10 @@ function renderCourses(){
           <input type="text" data-path="courses.${i}.gallery.${gi}.title">
           <label>キャプション</label>
           <input type="text" data-path="courses.${i}.gallery.${gi}.caption">
+          <button class="action-btn danger small" style="margin-top:8px;" onclick="removeGalleryItem(${i},${gi})">この作品例を削除</button>
         </div>
       `).join('')}
+      <button class="action-btn secondary small" style="margin-top:10px;" onclick="addGalleryItem(${i})">＋ 作品例を追加</button>
 
       <button class="action-btn danger" style="margin-top:14px;" onclick="removeCourse(${i})">このコースを削除</button>
     </details>
@@ -170,6 +171,14 @@ function removeCourse(i){
   if(config.courses.length <= 1){ alert('コースは最低1つ必要です'); return; }
   if(!confirm('「' + (config.courses[i].label || '(名称未設定)') + '」を削除します。よろしいですか？')) return;
   config.courses.splice(i,1);
+  renderCourses();
+}
+function addGalleryItem(i){
+  config.courses[i].gallery.push(blankGalleryItem());
+  renderCourses();
+}
+function removeGalleryItem(i, gi){
+  config.courses[i].gallery.splice(gi,1);
   renderCourses();
 }
 
