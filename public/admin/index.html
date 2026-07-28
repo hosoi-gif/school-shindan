@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>スクール診断 | 最上位管理画面</title>
+<link rel="stylesheet" href="/shared.css">
+</head>
+<body>
+
+<div id="gate">
+  <div class="gate-card">
+    <p style="font-weight:700;">最上位管理画面</p>
+    <p class="hint">パスワードを入力してください</p>
+    <input type="password" id="pwInput" placeholder="パスワード">
+    <button class="action-btn" style="width:100%;" onclick="checkPassword()">開く</button>
+  </div>
+</div>
+
+<div class="wrap hidden" id="appRoot">
+  <h1>最上位管理画面</h1>
+  <p class="subtitle">ここで編集する内容（スタート画面・質問・コース）は全会場共通。会場ごとの「ボーナス質問」や参加者URLの発行は「会場設定画面へ」から行う。</p>
+
+  <div class="panel">
+    <h2>設定の保存・バックアップ</h2>
+    <button class="action-btn" onclick="saveConfig()">この内容を保存する</button>
+    <button class="action-btn secondary" onclick="exportConfigJson()">バックアップをJSONで保存</button>
+    <label style="margin-top:14px;">JSONバックアップから復元</label>
+    <input type="file" accept=".json" onchange="importConfigJson(this.files[0])">
+    <p class="hint" id="saveStatus" style="margin-top:8px;"></p>
+  </div>
+
+  <div class="panel">
+    <h2>スタート画面・CTA文言</h2>
+    <label>スタート画面のタイトル（&lt;br&gt;で改行できます）</label>
+    <textarea data-path="ui.startTitle"></textarea>
+    <label>スタート画面の説明文</label>
+    <textarea data-path="ui.startLead"></textarea>
+    <div class="row2">
+      <div>
+        <label>「診断をはじめる」ボタンの文字</label>
+        <input type="text" data-path="ui.startButton">
+      </div>
+      <div>
+        <label>「もう一度診断する」ボタンの文字</label>
+        <input type="text" data-path="ui.restartButton">
+      </div>
+    </div>
+    <label>結果画面下部の呼びかけ文（&lt;br&gt;・&lt;strong&gt;が使えます）</label>
+    <textarea data-path="ui.cta.message"></textarea>
+    <label>呼びかけ文の下の小さい一言</label>
+    <input type="text" data-path="ui.cta.sub">
+    <label>QRコード画像URL（任意・空欄なら表示されません）</label>
+    <input type="url" data-path="ui.qr.imageUrl" placeholder="https://...">
+    <div class="row2">
+      <div>
+        <label>申込ページなどのURL（任意）</label>
+        <input type="url" data-path="ui.qr.linkUrl" placeholder="https://...">
+      </div>
+      <div>
+        <label>リンクの表示文字</label>
+        <input type="text" data-path="ui.qr.linkText" placeholder="例：こちらから申し込み">
+      </div>
+    </div>
+    <p class="hint">画像URL・URLの両方が空欄の場合は「ここにQRコード・URLを貼り付け」というプレースホルダーのままになります。</p>
+  </div>
+
+  <div class="panel">
+    <h2>質問（共通・全<span id="qCount"></span>問）</h2>
+    <div id="questionsList"></div>
+    <button class="action-btn secondary" onclick="addQuestion()">＋ 質問を追加</button>
+  </div>
+
+  <div class="panel">
+    <h2>コース（全<span id="cCount"></span>コース）</h2>
+    <p class="hint">重み（0〜3の数字）：0=関係ない／1=関連あり／2〜3=このコースの主軸。R:現実的・I:研究的・A:芸術的・S:社会的・E:企業的・C:慣習的の6タイプです。</p>
+    <div id="coursesList"></div>
+    <button class="action-btn secondary" onclick="addCourse()">＋ コースを追加</button>
+  </div>
+
+  <div class="actions-bar">
+    <button class="action-btn" onclick="saveConfig()">この内容を保存する</button>
+    <a href="/admin/venues"><button class="action-btn secondary" type="button">会場設定画面へ →</button></a>
+  </div>
+</div>
+
+<script src="/admin/auth.js"></script>
+<script src="/admin/admin.js"></script>
+</body>
+</html>

@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>スクール診断 | 会場オリジナル設定</title>
+<link rel="stylesheet" href="/shared.css">
+</head>
+<body>
+
+<div class="wrap" id="appRoot">
+  <h1 id="venueTitle">会場オリジナル設定</h1>
+  <p class="subtitle">この画面のURLを知っている人だけがこの会場の設定を編集できる。他の会場には影響しない。質問・コースなど共通の内容は最上位管理画面で編集する。</p>
+
+  <div id="loadError" class="panel hidden">
+    <p>この会場が見つかりませんでした。URLを確認してください。</p>
+  </div>
+
+  <div id="mainContent" class="hidden">
+    <div class="panel">
+      <h2>参加者URL</h2>
+      <p class="hint">生徒にはこちらのURLを配布する。</p>
+      <div class="url-box">
+        <code id="participantUrl"></code>
+        <button class="action-btn small" onclick="copyParticipantUrl()">コピー</button>
+      </div>
+      <a id="previewLink" href="#" target="_blank"><button class="action-btn secondary small" type="button">プレビューを開く</button></a>
+    </div>
+
+    <div class="panel">
+      <h2>会場名</h2>
+      <input type="text" data-path="name">
+    </div>
+
+    <div class="panel">
+      <h2>この会場だけのボーナス質問（全<span id="bqCount"></span>問）</h2>
+      <p class="hint">診断のスコアには一切影響しない、この会場だけの笑える質問。何を選んでも次の質問に進むだけ。共通の質問は全<span id="sharedQCount"></span>問あり、挿入位置はその何問目の直後かを指定する。</p>
+      <div id="bonusList"></div>
+      <button class="action-btn secondary" onclick="addBonusQuestion()">＋ ボーナス質問を追加</button>
+    </div>
+
+    <div class="actions-bar">
+      <button class="action-btn" onclick="saveVenue()">保存する</button>
+      <p class="hint" id="saveStatus" style="display:inline-block; margin-left:10px;"></p>
+    </div>
+  </div>
+</div>
+
+<script src="/venue-admin.js"></script>
+</body>
+</html>

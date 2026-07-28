@@ -1,0 +1,932 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>スクール診断 編集画面（管理者用）</title>
+<style>
+  :root{
+    --accent:#FF5722;
+    --accent-dark:#E64A19;
+    --navy:#1A2332;
+    --bg:#FFF8F3;
+    --card:#FFFFFF;
+    --gray:#6B7280;
+    --line:#EEE2D8;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    font-family:"Hiragino Kaku Gothic ProN","Hiragino Sans","Yu Gothic",sans-serif;
+    background:var(--bg);
+    color:var(--navy);
+  }
+  .wrap{ max-width:840px; margin:0 auto; padding:24px 16px 80px; }
+  h1{ font-size:20px; margin:0 0 4px; }
+  .subtitle{ color:var(--gray); font-size:13px; margin:0 0 24px; }
+  h2{ font-size:16px; margin:0 0 12px; border-left:4px solid var(--accent); padding-left:10px; }
+  .panel{ background:var(--card); border-radius:16px; padding:20px; margin-bottom:20px; box-shadow:0 4px 16px rgba(26,35,50,.06); }
+  label{ display:block; font-size:12px; font-weight:700; color:var(--gray); margin:10px 0 4px; }
+  label:first-child{ margin-top:0; }
+  input[type=text], input[type=url], input[type=number], textarea, select{
+    width:100%; padding:8px 10px; border:1px solid var(--line); border-radius:8px;
+    font-size:14px; font-family:inherit; background:#fff; color:var(--navy);
+  }
+  textarea{ resize:vertical; min-height:52px; }
+  .hint{ font-size:11px; color:var(--gray); margin:2px 0 0; }
+  .row6{ display:grid; grid-template-columns:repeat(6,1fr); gap:6px; }
+  .row2{ display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+  .row3{ display:grid; grid-template-columns:2fr 1fr 1fr; gap:10px; }
+  details{ border:1px solid var(--line); border-radius:12px; padding:12px 14px; margin-bottom:12px; background:#FFFDFB; }
+  details+details{ margin-top:0; }
+  summary{ font-weight:700; cursor:pointer; font-size:14px; }
+  summary::marker{ color:var(--accent); }
+  .flavor-box{ border:1px dashed var(--line); border-radius:10px; padding:10px; margin-top:8px; }
+  .flavor-title{ font-size:12px; font-weight:800; color:var(--accent-dark); margin-bottom:4px; }
+  .gallery-item{ border-top:1px dashed var(--line); padding-top:10px; margin-top:10px; }
+  .btn{
+    display:inline-block; background:var(--accent); color:#fff; border:none; border-radius:10px;
+    padding:10px 16px; font-size:13px; font-weight:700; cursor:pointer; margin-right:8px; margin-top:4px;
+  }
+  .btn:hover{ background:var(--accent-dark); }
+  .btn.secondary{ background:#fff; color:var(--accent-dark); border:2px solid var(--accent); }
+  .btn.danger{ background:#fff; color:#C0392B; border:2px solid #C0392B; padding:6px 12px; font-size:12px; }
+  .btn.small{ padding:6px 12px; font-size:12px; }
+  .actions-bar{
+    position:sticky; bottom:0; background:rgba(255,248,243,.95); backdrop-filter:blur(4px);
+    padding:14px 0; margin-top:8px; border-top:1px solid var(--line);
+  }
+  .qcard{ margin-bottom:10px; }
+  .hidden{ display:none !important; }
+  #gate{
+    position:fixed; inset:0; background:var(--navy); display:flex; align-items:center; justify-content:center; z-index:100;
+  }
+  .gate-card{ background:#fff; border-radius:16px; padding:28px; width:280px; text-align:center; }
+  .gate-card input{ margin:12px 0; }
+  .letter-label{ font-size:10px; text-align:center; color:var(--gray); margin-bottom:2px; }
+  .file-row{ display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
+  .file-row input[type=file]{ font-size:12px; }
+</style>
+</head>
+<body>
+
+<div id="gate">
+  <div class="gate-card">
+    <p style="font-weight:700;">スクール診断 編集画面</p>
+    <p class="hint">パスワードを入力してください</p>
+    <input type="password" id="pwInput" placeholder="パスワード">
+    <button class="btn" style="width:100%;" onclick="checkPassword()">開く</button>
+  </div>
+</div>
+
+<div class="wrap hidden" id="appRoot">
+  <h1>スクール診断 編集画面</h1>
+  <p class="subtitle">ここで編集した内容は、下の「完成したHTMLをダウンロード」を押すまでは生徒用ファイルに反映されません。編集が終わったらダウンロードして school_shindan.html を差し替えてください。</p>
+
+  <div class="panel">
+    <h2>設定の読み込み・保存</h2>
+    <div class="file-row">
+      <span class="hint">既存のファイルから読み込む：</span>
+      <input type="file" accept=".html" onchange="importFromHtml(this.files[0])">
+      <input type="file" accept=".json" onchange="importFromJson(this.files[0])">
+    </div>
+    <p class="hint" style="margin-top:8px;">左：今使っている school_shindan.html を選ぶとその内容を読み込みます。右：この画面で保存した設定(.json)を選ぶと途中から再開できます。</p>
+    <button class="btn secondary small" onclick="exportConfigJson()">今の内容を設定ファイル(.json)として保存</button>
+    <button class="btn secondary small" onclick="resetToDefault()">初期状態に戻す</button>
+  </div>
+
+  <div class="panel">
+    <h2>スタート画面・CTA文言</h2>
+    <label>スタート画面のタイトル（&lt;br&gt;で改行できます）</label>
+    <textarea data-path="ui.startTitle"></textarea>
+    <label>スタート画面の説明文</label>
+    <textarea data-path="ui.startLead"></textarea>
+    <div class="row2">
+      <div>
+        <label>「診断をはじめる」ボタンの文字</label>
+        <input type="text" data-path="ui.startButton">
+      </div>
+      <div>
+        <label>「もう一度診断する」ボタンの文字</label>
+        <input type="text" data-path="ui.restartButton">
+      </div>
+    </div>
+    <label>結果画面下部の呼びかけ文（&lt;br&gt;・&lt;strong&gt;が使えます）</label>
+    <textarea data-path="ui.cta.message"></textarea>
+    <label>呼びかけ文の下の小さい一言</label>
+    <input type="text" data-path="ui.cta.sub">
+    <label>QRコード画像URL（任意・空欄なら表示されません）</label>
+    <input type="url" data-path="ui.qr.imageUrl" placeholder="https://...">
+    <div class="row2">
+      <div>
+        <label>申込ページなどのURL（任意）</label>
+        <input type="url" data-path="ui.qr.linkUrl" placeholder="https://...">
+      </div>
+      <div>
+        <label>リンクの表示文字</label>
+        <input type="text" data-path="ui.qr.linkText" placeholder="例：こちらから申し込み">
+      </div>
+    </div>
+    <p class="hint">画像URL・URLの両方が空欄の場合は「ここにQRコード・URLを貼り付け」というプレースホルダーのままになります。</p>
+  </div>
+
+  <div class="panel">
+    <h2>質問（全<span id="qCount"></span>問）</h2>
+    <div id="questionsList"></div>
+    <button class="btn secondary" onclick="addQuestion()">＋ 質問を追加</button>
+  </div>
+
+  <div class="panel">
+    <h2>コース（全<span id="cCount"></span>コース）</h2>
+    <p class="hint">重み（0〜3の数字）：0=関係ない／1=関連あり／2〜3=このコースの主軸。R:現実的・I:研究的・A:芸術的・S:社会的・E:企業的・C:慣習的の6タイプです。</p>
+    <div id="coursesList"></div>
+    <button class="btn secondary" onclick="addCourse()">＋ コースを追加</button>
+  </div>
+
+  <div class="panel">
+    <h2>会場ごとのボーナス質問（全<span id="vCount"></span>会場）</h2>
+    <p class="hint">質問・コースなど上の内容はどの会場でも共通。ここで会場ごとに、診断のスコアには一切影響しない「笑える質問」を好きな数だけ追加できる。会場を分ければ内容も独立していて、片方を編集してももう片方には影響しない。会場ごとに下の「この会場のHTMLをダウンロード」から別ファイルとして書き出す。</p>
+    <div id="venuesList"></div>
+    <button class="btn secondary" onclick="addVenue()">＋ 会場を追加</button>
+  </div>
+
+  <div class="actions-bar">
+    <p class="hint" style="margin:0 0 8px;">下のボタンはボーナス質問なしの共通版。会場ごとのボーナス質問入りHTMLは、上の各会場カード内のボタンから書き出す。</p>
+    <button class="btn" onclick="previewQuiz()">プレビュー（新しいタブで確認）</button>
+    <button class="btn" onclick="downloadQuiz()">完成したHTMLをダウンロード（共通版）</button>
+  </div>
+</div>
+
+<script>
+const ADMIN_PASSWORD = "lit-school-2026"; // ここを書き換えるとパスワードを変更できます（簡易的な入室制限で、強固なセキュリティではありません）
+
+function checkPassword(){
+  const val = document.getElementById('pwInput').value;
+  if(val === ADMIN_PASSWORD){
+    document.getElementById('gate').classList.add('hidden');
+    document.getElementById('appRoot').classList.remove('hidden');
+  } else {
+    alert('パスワードが違います');
+  }
+}
+document.getElementById('pwInput').addEventListener('keydown', e=>{ if(e.key==='Enter') checkPassword(); });
+
+const LETTERS = ["R","I","A","S","E","C"];
+const LETTER_LABELS = {R:"現実的(R)", I:"研究的(I)", A:"芸術的(A)", S:"社会的(S)", E:"企業的(E)", C:"慣習的(C)"};
+
+const DEFAULT_CONFIG = {
+  "ui": {
+    "startTitle": "本気度低めで<br>ぶっちゃける<br>スクール診断",
+    "startLead": "全12問、直感で答えるだけ。あなたの「つくるキャラ」と、ライフイズテック スクールのおすすめコース＆適性%がわかっちゃいます。所要時間 約3〜4分。",
+    "startButton": "診断をはじめる",
+    "restartButton": "もう一度診断する",
+    "cta": {
+      "message": "もっと本気で\"つくる\"を続けたくなったら、<br><strong>ライフイズテック スクール</strong>で待ってるよ！",
+      "sub": "詳しくはスタッフに聞いてみよう"
+    },
+    "qr": {
+      "imageUrl": "",
+      "linkUrl": "",
+      "linkText": ""
+    }
+  },
+  "questions": [
+    {
+      "q": "放課後、時間ができたら真っ先にやりたいことは？",
+      "opts": [
+        "何か工作したり、ガジェットをいじる",
+        "気になることを深掘りして調べる",
+        "絵を描いたり、何か表現する",
+        "友達とおしゃべりしたり相談に乗る",
+        "新しい企画を思いついてみんなを誘う",
+        "やることリストを整理してスケジュールを組む"
+      ]
+    },
+    {
+      "q": "グループ課題で自然と担当しているのは？",
+      "opts": [
+        "実際に手を動かして組み立てる係",
+        "データや資料を集めて分析する係",
+        "デザインや世界観を考える係",
+        "みんなの意見をまとめて調整する係",
+        "進行役・リーダーとして引っ張る係",
+        "提出物の体裁やフォーマットを整える係"
+      ]
+    },
+    {
+      "q": "好きな教科・得意なことは？",
+      "opts": [
+        "技術・家庭科（実際に作る）",
+        "理科・数学（仕組みを解明する）",
+        "美術・音楽（表現する）",
+        "道徳・国語（人の気持ちを考える）",
+        "社会・弁論（人を説得する）",
+        "情報整理・記録的な作業"
+      ]
+    },
+    {
+      "q": "休み時間の過ごし方は？",
+      "opts": [
+        "何かを分解したり組み立てたりする",
+        "疑問に思ったことをネットで調べる",
+        "落書きや妄想の世界に浸る",
+        "友達とワイワイ話す",
+        "場を盛り上げる企画を考える",
+        "持ち物や机の中を整理する"
+      ]
+    },
+    {
+      "q": "SNSでついつい見ちゃうのは？",
+      "opts": [
+        "DIY・ガジェットレビュー系",
+        "考察・雑学・検証系",
+        "イラスト・写真・二次創作系",
+        "友達やインフルエンサーの日常系",
+        "成功者・起業家・トレンド系",
+        "ライフハック・整理術系"
+      ]
+    },
+    {
+      "q": "文化祭・学校行事で本領発揮するのは？",
+      "opts": [
+        "大道具・装置づくり",
+        "出し物の仕組みや企画の裏付け調査",
+        "装飾・世界観づくり",
+        "来場者やクラスメイトへの対応",
+        "企画の音頭を取って人を巻き込む",
+        "全体の進行表・タイムスケジュール管理"
+      ]
+    },
+    {
+      "q": "欲しいものが売っていなかったら？",
+      "opts": [
+        "自分で作れないか試してみる",
+        "なぜ売ってないのか理由を調べる",
+        "「無いなら想像で楽しもう」と考える",
+        "友達に聞いて情報を集める",
+        "「これ商売になりそう」と考える",
+        "代わりになる条件を整理して探す"
+      ]
+    },
+    {
+      "q": "将来「これならずっとできる」と思うのは？",
+      "opts": [
+        "手に職をつけて何かを作り続ける仕事",
+        "謎や課題を研究し続ける仕事",
+        "表現し続けるクリエイティブな仕事",
+        "人を支える・教える仕事",
+        "自分で何かを立ち上げて動かす仕事",
+        "正確さが求められる仕事"
+      ]
+    },
+    {
+      "q": "テストの点数より、実は嬉しいのは？",
+      "opts": [
+        "実技や作品を仕上げてできた達成感",
+        "難問を解き明かせたこと",
+        "独創的な発想を褒められたこと",
+        "友達と支え合えたこと",
+        "リーダーシップを発揮できたこと",
+        "計画通り完璧にこなせたこと"
+      ]
+    },
+    {
+      "q": "一番「褒められて嬉しい」ポイントは？",
+      "opts": [
+        "手先の器用さ・行動力",
+        "頭の回転の速さ・分析力",
+        "発想力・センス",
+        "気配り・コミュ力",
+        "巻き込み力・度胸",
+        "几帳面さ・正確さ"
+      ]
+    },
+    {
+      "q": "もし超能力が1つ使えるなら？",
+      "opts": [
+        "どんな道具も一瞬で作れる力",
+        "どんな謎も一瞬で解ける力",
+        "想像したものを実体化させる力",
+        "相手の気持ちが分かる力",
+        "どんな人も味方にできる力",
+        "すべてを完璧に整理整頓できる力"
+      ]
+    },
+    {
+      "q": "部活・習い事を選ぶなら？",
+      "opts": [
+        "モノづくり系（技術系の部活）",
+        "研究・科学系（科学部など）",
+        "芸術・表現系（美術・軽音など）",
+        "チーム協力系（人と関わる部活）",
+        "生徒会・企画運営系",
+        "記録・管理系（会計・書記など）"
+      ]
+    }
+  ],
+  "courses": [
+    {
+      "key": "a",
+      "label": "iPhoneアプリ",
+      "desc": "iPhoneアプリコースでは、Swiftというプログラミング言語を使って、あなたのアイデアを本物のiPhoneアプリとして開発。ストアリリースを目指します。",
+      "weights": {
+        "I": 2,
+        "R": 1
+      },
+      "hot": {
+        "icon": "⚡",
+        "name": "ひらめき番長",
+        "quote": "「あ、それ作れば解決じゃん」が口癖。",
+        "desc": "頭の中は常にひらめきの花火大会。友達の「不便だな〜」を聞いた瞬間、もう解決策を考え始めている行動力オバケタイプ。"
+      },
+      "cool": {
+        "icon": "🔍",
+        "name": "隠れ発明家",
+        "quote": "目立たないけど、気づけば周りのMVP。",
+        "desc": "誰も気づかない「地味に困ってること」を、こっそり解決しているタイプ。派手さはないが実は一番「デキる」人かも。"
+      },
+      "gallery": [
+        {
+          "mediaType": "none",
+          "mediaUrl": "",
+          "icon": "📱",
+          "kind": "画像",
+          "title": "ジャンル：生活お助けアプリ",
+          "caption": "先輩作品例：忘れ物防止リマインダーアプリ"
+        },
+        {
+          "mediaType": "none",
+          "mediaUrl": "",
+          "icon": "🎬",
+          "kind": "動画",
+          "title": "制作の裏側インタビュー",
+          "caption": "（差し替え用スロット：先輩の制作秘話動画）"
+        },
+        {
+          "mediaType": "none",
+          "mediaUrl": "",
+          "icon": "📱",
+          "kind": "画像",
+          "title": "ジャンル：ちょいゲームアプリ",
+          "caption": "先輩作品例：反射神経タイミングゲーム"
+        }
+      ]
+    },
+    {
+      "key": "b",
+      "label": "Androidアプリ",
+      "desc": "Androidアプリコースでは、Javaを使ってロジックを組み立てながら、世界中のAndroid端末で動くアプリを開発します。",
+      "weights": {
+        "C": 2,
+        "I": 1
+      },
+      "hot": {
+        "icon": "🔥",
+        "name": "理論バトル系主人公",
+        "quote": "「それ、こうすればもっと速いよ」",
+        "desc": "気づけば友達の宿題まで効率化してしまう。頭の回転の速さで周りを圧倒する、ロジック系バトル漫画の主人公タイプ。"
+      },
+      "cool": {
+        "icon": "♟️",
+        "name": "静かなる軍師",
+        "quote": "騒がず、慌てず、もう作戦は完成している。",
+        "desc": "表には出ないが、頭の中では既に完璧な作戦が組み上がっている。気づいたら場を仕切っている参謀タイプ。"
+      },
+      "gallery": [
+        {
+          "mediaType": "none",
+          "mediaUrl": "",
+          "icon": "🤖",
+          "kind": "画像",
+          "title": "ジャンル：学習サポートアプリ",
+          "caption": "先輩作品例：単語暗記アプリ"
+        },
+        {
+          "mediaType": "none",
+          "mediaUrl": "",
+          "icon": "🎬",
+          "kind": "動画",
+          "title": "開発の裏側インタビュー",
+          "caption": "（差し替え用スロット：先輩の制作秘話動画）"
+        },
+        {
+          "mediaType": "none",
+          "mediaUrl": "",
+          "icon": "🤖",
+          "kind": "画像",
+          "title": "ジャンル：診断・計算アプリ",
+          "caption": "先輩作品例：おこづかい管理アプリ"
+        }
+      ]
+    },
+    {
+      "key": "c",
+      "label": "Unityゲーム",
+      "desc": "Unityゲームコースでは、C#を使って自分の世界観を詰め込んだ本格3Dゲームを開発します。",
+      "weights": {
+        "A": 2,
+        "E": 1
+      },
+      "hot": {
+        "icon": "🐉",
+        "name": "異世界建国主",
+        "quote": "設定資料、勝手に3つくらい増える。",
+        "desc": "頭の中に既にいくつも世界が存在している。放っておくと世界観と裏設定がどんどん増殖していくタイプ。"
+      },
+      "cool": {
+        "icon": "🌙",
+        "name": "静寂の世界観職人",
+        "quote": "派手さより、深さで魅せる。",
+        "desc": "じっくり練り込まれた世界観で、気づけば周りも引き込まれている。物静かだけど中身は壮大なタイプ。"
+      },
+      "gallery": [
+        {
+          "mediaType": "none",
+          "mediaUrl": "",
+          "icon": "🎮",
+          "kind": "動画",
+          "title": "3Dアクションゲーム",
+          "caption": "先輩作品例：迷路脱出3Dゲーム"
+        },
+        {
+          "mediaType": "none",
+          "mediaUrl": "",
+          "icon": "🎬",
+          "kind": "動画",
+          "title": "制作の裏側インタビュー",
+          "caption": "（差し替え用スロット：先輩の制作秘話動画）"
+        },
+        {
+          "mediaType": "none",
+          "mediaUrl": "",
+          "icon": "🎮",
+          "kind": "画像",
+          "title": "世界観デザイン画",
+          "caption": "先輩作品例：オリジナルRPGの世界観設定"
+        }
+      ]
+    },
+    {
+      "key": "d",
+      "label": "Webデザイン",
+      "desc": "Webデザインコースでは、デザイン理論とコーディングを学び、見る人を惹きつけるWebサイトを制作します。",
+      "weights": {
+        "A": 2,
+        "C": 1
+      },
+      "hot": {
+        "icon": "📸",
+        "name": "映え番長",
+        "quote": "とにかく「映え」を求めて生きている。",
+        "desc": "カメラロールの9割がイメージ収集フォルダ。センスと勢いで一気に仕上げるタイプ。"
+      },
+      "cool": {
+        "icon": "✨",
+        "name": "美意識モンスター",
+        "quote": "1pxのズレも許さない。",
+        "desc": "細部までこだわり抜く、静かな完璧主義者。誰も気づかない部分にまでこだわりが宿るタイプ。"
+      },
+      "gallery": [
+        {
+          "mediaType": "none",
+          "mediaUrl": "",
+          "icon": "🖥️",
+          "kind": "画像",
+          "title": "作品：ポートフォリオサイト",
+          "caption": "先輩作品例：自己紹介Webサイト"
+        },
+        {
+          "mediaType": "none",
+          "mediaUrl": "",
+          "icon": "🎬",
+          "kind": "動画",
+          "title": "制作の裏側インタビュー",
+          "caption": "（差し替え用スロット：先輩の制作秘話動画）"
+        },
+        {
+          "mediaType": "none",
+          "mediaUrl": "",
+          "icon": "🖥️",
+          "kind": "画像",
+          "title": "作品：ブランドサイト風デザイン",
+          "caption": "先輩作品例：架空カフェのWebサイト"
+        }
+      ]
+    },
+    {
+      "key": "e",
+      "label": "Webサービス",
+      "desc": "Webサービスコースでは、Ruby on Railsなどを使い、たくさんの人が使えるWebサービスを開発します。",
+      "weights": {
+        "S": 2,
+        "E": 1
+      },
+      "hot": {
+        "icon": "🎤",
+        "name": "陽キャホスト部部長",
+        "quote": "初対面でも5分で友達になれる。",
+        "desc": "人と人をつなぐのが得意中の得意。気づけばその場のムードメーカーになっているタイプ。"
+      },
+      "cool": {
+        "icon": "🕸️",
+        "name": "縁の下のコネクター",
+        "quote": "目立たないけど、人間関係のハブ。",
+        "desc": "表には出ないが、気づけばクラスや友達グループの調整役になっている、信頼される黒子タイプ。"
+      },
+      "gallery": [
+        {
+          "mediaType": "none",
+          "mediaUrl": "",
+          "icon": "🌐",
+          "kind": "画像",
+          "title": "作品：掲示板・マッチングサービス",
+          "caption": "先輩作品例：部活動マッチングサービス"
+        },
+        {
+          "mediaType": "none",
+          "mediaUrl": "",
+          "icon": "🎬",
+          "kind": "動画",
+          "title": "制作の裏側インタビュー",
+          "caption": "（差し替え用スロット：先輩の制作秘話動画）"
+        },
+        {
+          "mediaType": "none",
+          "mediaUrl": "",
+          "icon": "🌐",
+          "kind": "画像",
+          "title": "作品：投稿共有サービス",
+          "caption": "先輩作品例：写真共有アプリ"
+        }
+      ]
+    }
+  ],
+  "venues": []
+};
+
+let config = JSON.parse(JSON.stringify(DEFAULT_CONFIG));
+
+function setPath(obj, path, value){
+  const parts = path.split('.');
+  let cur = obj;
+  for(let i=0;i<parts.length-1;i++) cur = cur[parts[i]];
+  cur[parts[parts.length-1]] = value;
+}
+function getPath(obj, path){
+  return path.split('.').reduce((o,k)=> (o==null? o : o[k]), obj);
+}
+
+function bindInputs(container){
+  container.querySelectorAll('[data-path]').forEach(el=>{
+    const path = el.dataset.path;
+    const val = getPath(config, path);
+    if(el.type === 'number') el.value = (val ?? 0);
+    else el.value = val ?? '';
+  });
+}
+
+function onFieldChange(e){
+  const el = e.target;
+  const path = el.dataset.path;
+  if(!path) return;
+  let value = el.value;
+  if(el.type === 'number') value = Number(value) || 0;
+  setPath(config, path, value);
+}
+
+document.getElementById('appRoot').addEventListener('input', onFieldChange);
+document.getElementById('appRoot').addEventListener('change', onFieldChange);
+
+// ---------- 質問セクション ----------
+function renderQuestions(){
+  document.getElementById('qCount').textContent = config.questions.length;
+  const list = document.getElementById('questionsList');
+  list.innerHTML = config.questions.map((q, i)=>`
+    <details class="qcard" open>
+      <summary>Q${i+1}. ${escapeHtmlForDisplay(q.q || '(未入力)')}</summary>
+      <label>質問文</label>
+      <textarea data-path="questions.${i}.q"></textarea>
+      <div class="row6">
+        ${LETTERS.map((L, li)=>`
+          <div>
+            <div class="letter-label">${LETTER_LABELS[L]}</div>
+            <input type="text" data-path="questions.${i}.opts.${li}">
+          </div>`).join('')}
+      </div>
+      <button class="btn danger" style="margin-top:10px;" onclick="removeQuestion(${i})">この質問を削除</button>
+    </details>
+  `).join('');
+  bindInputs(list);
+}
+function addQuestion(){
+  config.questions.push({ q:"", opts:["","","","","",""] });
+  renderQuestions();
+}
+function removeQuestion(i){
+  if(config.questions.length <= 1){ alert('質問は最低1問必要です'); return; }
+  config.questions.splice(i,1);
+  renderQuestions();
+}
+
+// ---------- コースセクション ----------
+function blankCourse(){
+  return {
+    key: "course_" + Math.random().toString(36).slice(2,8),
+    label: "新しいコース",
+    desc: "",
+    weights: { R:0,I:0,A:0,S:0,E:0,C:0 },
+    hot:  { icon:"⭐", imageUrl:"", name:"", quote:"", desc:"" },
+    cool: { icon:"⭐", imageUrl:"", name:"", quote:"", desc:"" },
+    gallery: [
+      { mediaType:"none", mediaUrl:"", icon:"📷", kind:"画像", title:"", caption:"" },
+      { mediaType:"none", mediaUrl:"", icon:"🎬", kind:"動画", title:"", caption:"" },
+      { mediaType:"none", mediaUrl:"", icon:"📷", kind:"画像", title:"", caption:"" }
+    ]
+  };
+}
+
+function renderCourses(){
+  document.getElementById('cCount').textContent = config.courses.length;
+  const list = document.getElementById('coursesList');
+  list.innerHTML = config.courses.map((c, i)=>`
+    <details>
+      <summary>${escapeHtmlForDisplay(c.label || '(未入力)')}</summary>
+
+      <label>コース名</label>
+      <input type="text" data-path="courses.${i}.label">
+      <label>コース紹介文</label>
+      <textarea data-path="courses.${i}.desc"></textarea>
+
+      <label>RIASECの重み（0〜3）</label>
+      <div class="row6">
+        ${LETTERS.map(L=>`
+          <div>
+            <div class="letter-label">${LETTER_LABELS[L]}</div>
+            <input type="number" min="0" max="3" step="1" data-path="courses.${i}.weights.${L}">
+          </div>`).join('')}
+      </div>
+
+      <div class="flavor-box">
+        <div class="flavor-title">🔥 熱血タイプ（対人・行動力が高い回答者向け）</div>
+        <div class="row2">
+          <div><label>アイコン（絵文字・画像URL未設定の時に表示）</label><input type="text" data-path="courses.${i}.hot.icon"></div>
+          <div><label>タイプ名</label><input type="text" data-path="courses.${i}.hot.name"></div>
+        </div>
+        <label>キャラ画像URL（任意・入れると絵文字より優先して表示されます）</label>
+        <input type="url" data-path="courses.${i}.hot.imageUrl" placeholder="https://...">
+        <label>キャッチコピー</label>
+        <input type="text" data-path="courses.${i}.hot.quote">
+        <label>タイプ説明</label>
+        <textarea data-path="courses.${i}.hot.desc"></textarea>
+      </div>
+
+      <div class="flavor-box">
+        <div class="flavor-title">🌙 クールタイプ（分析・秩序が高い回答者向け）</div>
+        <div class="row2">
+          <div><label>アイコン（絵文字・画像URL未設定の時に表示）</label><input type="text" data-path="courses.${i}.cool.icon"></div>
+          <div><label>タイプ名</label><input type="text" data-path="courses.${i}.cool.name"></div>
+        </div>
+        <label>キャラ画像URL（任意・入れると絵文字より優先して表示されます）</label>
+        <input type="url" data-path="courses.${i}.cool.imageUrl" placeholder="https://...">
+        <label>キャッチコピー</label>
+        <input type="text" data-path="courses.${i}.cool.quote">
+        <label>タイプ説明</label>
+        <textarea data-path="courses.${i}.cool.desc"></textarea>
+      </div>
+
+      <label style="margin-top:14px;">先輩作品ギャラリー（3件）</label>
+      ${c.gallery.map((g, gi)=>`
+        <div class="gallery-item">
+          <div class="row3">
+            <div>
+              <label>種類</label>
+              <select data-path="courses.${i}.gallery.${gi}.mediaType">
+                <option value="none">アイコンのみ（プレースホルダー）</option>
+                <option value="image">画像URL</option>
+                <option value="video">動画URL（YouTube可）</option>
+              </select>
+            </div>
+            <div><label>ラベル（例：画像／動画）</label><input type="text" data-path="courses.${i}.gallery.${gi}.kind"></div>
+            <div><label>アイコン（絵文字・種類がアイコンのみの時に表示）</label><input type="text" data-path="courses.${i}.gallery.${gi}.icon"></div>
+          </div>
+          <label>画像・動画のURL（種類が画像/動画の時のみ使用）</label>
+          <input type="url" data-path="courses.${i}.gallery.${gi}.mediaUrl" placeholder="https://...">
+          <label>タイトル</label>
+          <input type="text" data-path="courses.${i}.gallery.${gi}.title">
+          <label>キャプション</label>
+          <input type="text" data-path="courses.${i}.gallery.${gi}.caption">
+        </div>
+      `).join('')}
+
+      <button class="btn danger" style="margin-top:14px;" onclick="removeCourse(${i})">このコースを削除</button>
+    </details>
+  `).join('');
+  bindInputs(list);
+  list.querySelectorAll('select[data-path]').forEach(sel=>{
+    sel.value = getPath(config, sel.dataset.path) || 'none';
+  });
+}
+function addCourse(){
+  config.courses.push(blankCourse());
+  renderCourses();
+}
+function removeCourse(i){
+  if(config.courses.length <= 1){ alert('コースは最低1つ必要です'); return; }
+  if(!confirm('「' + (config.courses[i].label || '(名称未設定)') + '」を削除します。よろしいですか？')) return;
+  config.courses.splice(i,1);
+  renderCourses();
+}
+
+// ---------- 会場ごとのボーナス質問セクション ----------
+function blankBonusQuestion(){
+  return { q:"", opts:["",""], afterQuestion:0 };
+}
+function blankVenue(){
+  return { name:"新しい会場", bonusQuestions:[] };
+}
+
+function renderVenues(){
+  document.getElementById('vCount').textContent = config.venues.length;
+  const list = document.getElementById('venuesList');
+  const maxQ = config.questions.length;
+  list.innerHTML = config.venues.map((v, vi)=>`
+    <details>
+      <summary>${escapeHtmlForDisplay(v.name || '(未入力)')}（ボーナス質問${v.bonusQuestions.length}件）</summary>
+
+      <label>会場名（ファイル名にも使われます）</label>
+      <input type="text" data-path="venues.${vi}.name">
+
+      ${v.bonusQuestions.map((bq, qi)=>`
+        <div class="gallery-item">
+          <label>質問文</label>
+          <textarea data-path="venues.${vi}.bonusQuestions.${qi}.q"></textarea>
+          <label>挿入位置（0=最初の質問より前／Nを指定するとN問目の直後に表示。全${maxQ}問中）</label>
+          <input type="number" min="0" max="${maxQ}" step="1" data-path="venues.${vi}.bonusQuestions.${qi}.afterQuestion">
+          <label>選択肢（診断には影響しません。何を選んでも次に進むだけ）</label>
+          ${bq.opts.map((opt, oi)=>`
+            <div style="display:flex; gap:6px; align-items:center; margin-bottom:6px;">
+              <input type="text" style="flex:1;" data-path="venues.${vi}.bonusQuestions.${qi}.opts.${oi}">
+              <button class="btn danger small" style="margin:0;" onclick="removeBonusChoice(${vi},${qi},${oi})">削除</button>
+            </div>
+          `).join('')}
+          <button class="btn secondary small" onclick="addBonusChoice(${vi},${qi})">＋ 選択肢を追加</button>
+          <button class="btn danger small" onclick="removeBonusQuestion(${vi},${qi})">この質問を削除</button>
+        </div>
+      `).join('')}
+      <button class="btn secondary" style="margin-top:10px;" onclick="addBonusQuestion(${vi})">＋ ボーナス質問を追加</button>
+
+      <div style="margin-top:16px; border-top:1px solid var(--line); padding-top:12px;">
+        <button class="btn" onclick="previewVenue(${vi})">この会場をプレビュー</button>
+        <button class="btn" onclick="downloadVenue(${vi})">この会場のHTMLをダウンロード</button>
+        <button class="btn danger" onclick="removeVenue(${vi})">この会場を削除</button>
+      </div>
+    </details>
+  `).join('');
+  bindInputs(list);
+}
+
+function addVenue(){
+  config.venues.push(blankVenue());
+  renderVenues();
+}
+function removeVenue(vi){
+  if(!confirm('「' + (config.venues[vi].name || '(名称未設定)') + '」を削除します。よろしいですか？')) return;
+  config.venues.splice(vi,1);
+  renderVenues();
+}
+function addBonusQuestion(vi){
+  config.venues[vi].bonusQuestions.push(blankBonusQuestion());
+  renderVenues();
+}
+function removeBonusQuestion(vi, qi){
+  config.venues[vi].bonusQuestions.splice(qi,1);
+  renderVenues();
+}
+function addBonusChoice(vi, qi){
+  config.venues[vi].bonusQuestions[qi].opts.push("");
+  renderVenues();
+}
+function removeBonusChoice(vi, qi, oi){
+  const opts = config.venues[vi].bonusQuestions[qi].opts;
+  if(opts.length <= 2){ alert('選択肢は最低2つ必要です'); return; }
+  opts.splice(oi,1);
+  renderVenues();
+}
+
+function buildVenueHtml(vi){
+  const venue = config.venues[vi];
+  const exportConfig = {
+    ui: config.ui,
+    questions: config.questions,
+    courses: config.courses,
+    bonusQuestions: venue.bonusQuestions || []
+  };
+  return TEMPLATE_HTML.replace('__CONFIG_JSON_PLACEHOLDER__', JSON.stringify(exportConfig, null, 2));
+}
+function previewVenue(vi){
+  const blob = new Blob([buildVenueHtml(vi)], {type:'text/html'});
+  window.open(URL.createObjectURL(blob), '_blank');
+}
+function downloadVenue(vi){
+  const blob = new Blob([buildVenueHtml(vi)], {type:'text/html'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  const safeName = (config.venues[vi].name || ('venue' + vi)).replace(/[\\/:*?"<>|]/g, '_');
+  a.href = url; a.download = `school_shindan_${safeName}.html`;
+  document.body.appendChild(a); a.click(); a.remove();
+  URL.revokeObjectURL(url);
+}
+
+function escapeHtmlForDisplay(str){
+  return String(str).replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+}
+
+function renderAll(){
+  bindInputs(document.getElementById('appRoot'));
+  renderQuestions();
+  renderCourses();
+  renderVenues();
+}
+
+// ---------- 読み込み・保存 ----------
+function resetToDefault(){
+  if(!confirm('編集中の内容は失われます。初期状態に戻しますか？')) return;
+  config = JSON.parse(JSON.stringify(DEFAULT_CONFIG));
+  renderAll();
+}
+
+function exportConfigJson(){
+  const blob = new Blob([JSON.stringify(config, null, 2)], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = 'shindan_config.json';
+  document.body.appendChild(a); a.click(); a.remove();
+  URL.revokeObjectURL(url);
+}
+
+function importConfigObject(obj){
+  if(!obj || !Array.isArray(obj.questions) || !Array.isArray(obj.courses)){
+    alert('設定の形式が正しくないため読み込めませんでした');
+    return;
+  }
+  if(!Array.isArray(obj.venues)){
+    // school_shindan.html から読み込んだ場合は venues の入れ物がなく、
+    // その会場専用の bonusQuestions が直接入っているので、1つの会場として取り込む。
+    obj.venues = (Array.isArray(obj.bonusQuestions) && obj.bonusQuestions.length)
+      ? [{ name:"インポートした会場", bonusQuestions: obj.bonusQuestions }]
+      : [];
+  }
+  config = obj;
+  renderAll();
+  alert('読み込みました');
+}
+
+function importFromJson(file){
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = ()=>{
+    try{ importConfigObject(JSON.parse(reader.result)); }
+    catch(e){ alert('JSONの読み込みに失敗しました: ' + e.message); }
+  };
+  reader.readAsText(file);
+}
+
+function importFromHtml(file){
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = ()=>{
+    const text = reader.result;
+    const m = text.match(/<script type="application\/json" id="quiz-config">([\s\S]*?)<\/script>/);
+    if(!m){ alert('このファイルからは設定を読み取れませんでした（school_shindan.htmlを選んでください）'); return; }
+    try{ importConfigObject(JSON.parse(m[1])); }
+    catch(e){ alert('設定の読み込みに失敗しました: ' + e.message); }
+  };
+  reader.readAsText(file);
+}
+
+// ---------- 書き出し ----------
+const TEMPLATE_HTML = "<!DOCTYPE html>\n<html lang=\"ja\">\n<head>\n<meta charset=\"UTF-8\">\n<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n<title>スクール診断 | Life is Tech!</title>\n<style>\n  :root{\n    --accent:#FF5722;\n    --accent-dark:#E64A19;\n    --navy:#1A2332;\n    --bg:#FFF8F3;\n    --card:#FFFFFF;\n    --gray:#6B7280;\n  }\n  *{box-sizing:border-box;}\n  body{\n    margin:0;\n    font-family:\"Hiragino Kaku Gothic ProN\",\"Hiragino Sans\",\"Yu Gothic\",sans-serif;\n    background:linear-gradient(180deg,var(--bg) 0%,#FFEEE2 100%);\n    color:var(--navy);\n    min-height:100vh;\n    display:flex;\n    align-items:center;\n    justify-content:center;\n    padding:16px;\n  }\n  .app{ width:100%; max-width:480px; }\n  .card{\n    background:var(--card);\n    border-radius:24px;\n    box-shadow:0 8px 30px rgba(26,35,50,0.12);\n    padding:32px 24px;\n    text-align:center;\n  }\n  .badge{\n    display:inline-block;\n    background:var(--accent);\n    color:#fff;\n    font-size:12px;\n    font-weight:700;\n    letter-spacing:0.05em;\n    padding:6px 14px;\n    border-radius:999px;\n    margin-bottom:16px;\n  }\n  h1{ font-size:22px; margin:0 0 8px; line-height:1.4; }\n  p.lead{ color:var(--gray); font-size:14px; line-height:1.7; margin:0 0 24px; }\n  .btn{\n    display:block; width:100%; background:var(--accent); color:#fff;\n    border:none; border-radius:14px; padding:16px; font-size:16px; font-weight:700;\n    cursor:pointer; margin-top:12px; transition:transform .1s, background .2s;\n  }\n  .btn:active{ transform:scale(0.97); }\n  .btn:hover{ background:var(--accent-dark); }\n  .btn.secondary{ background:transparent; color:var(--accent); border:2px solid var(--accent); }\n  .progress-wrap{ height:8px; background:#F0E4DC; border-radius:999px; overflow:hidden; margin-bottom:20px; }\n  .progress-bar{ height:100%; background:var(--accent); border-radius:999px; transition:width .3s ease; }\n  .qnum{ font-size:13px; color:var(--gray); font-weight:700; margin-bottom:6px; }\n  .question{ font-size:18px; font-weight:700; line-height:1.5; margin-bottom:20px; }\n  .choice{\n    display:flex; align-items:center; text-align:left; width:100%;\n    background:#FFF8F3; border:2px solid transparent; border-radius:14px;\n    padding:14px 16px; font-size:15px; color:var(--navy); margin-bottom:10px;\n    cursor:pointer; transition:all .15s;\n  }\n  .choice:hover{ border-color:var(--accent); background:#FFEEE2; }\n  .type-icon{ font-size:56px; margin-bottom:8px; }\n  .type-icon img{ width:110px; height:110px; object-fit:cover; border-radius:20px; }\n  .type-name{ font-size:24px; font-weight:800; color:var(--accent-dark); margin:0 0 2px; }\n  .type-quote{ font-size:13px; color:var(--gray); font-style:italic; margin:0 0 14px; }\n  .course-name{\n    font-size:15px; font-weight:700; background:#FFEEE2; color:var(--accent-dark);\n    display:inline-block; padding:6px 16px; border-radius:999px; margin-bottom:16px;\n  }\n  .desc{ font-size:14px; line-height:1.8; color:var(--navy); text-align:left; margin-bottom:16px; }\n  .course-box{ background:var(--navy); color:#fff; border-radius:16px; padding:18px; text-align:left; margin-bottom:20px; }\n  .course-box .label{ font-size:11px; color:#FFB08A; font-weight:700; letter-spacing:.05em; margin-bottom:6px; }\n  .course-box p{ font-size:13.5px; line-height:1.7; margin:0; color:#E5E9F0; }\n\n  .section-title{\n    font-size:13px; font-weight:800; color:var(--navy); text-align:left;\n    margin:0 0 10px; display:flex; align-items:center; gap:6px;\n  }\n  .chart{ text-align:left; margin-bottom:22px; }\n  .chart-row{ margin-bottom:10px; }\n  .chart-labels{ display:flex; justify-content:space-between; font-size:12.5px; font-weight:700; margin-bottom:4px; }\n  .chart-labels .pct{ color:var(--accent-dark); }\n  .chart-track{ height:10px; background:#F0E4DC; border-radius:999px; overflow:hidden; }\n  .chart-fill{ height:100%; border-radius:999px; background:linear-gradient(90deg,var(--accent),var(--accent-dark)); transition:width .6s ease; }\n  .chart-row.top .chart-labels{ color:var(--accent-dark); }\n\n  .gallery-wrap{ margin-bottom:22px; }\n  .gallery-scroll{\n    display:flex; gap:12px; overflow-x:auto; scroll-snap-type:x mandatory;\n    padding-bottom:6px; -webkit-overflow-scrolling:touch;\n  }\n  .gallery-scroll::-webkit-scrollbar{ height:5px; }\n  .gallery-scroll::-webkit-scrollbar-thumb{ background:#F0C9B5; border-radius:999px; }\n  .gallery-card{\n    flex:0 0 78%; scroll-snap-align:start; border-radius:16px; overflow:hidden;\n    background:var(--navy); text-align:left; cursor:pointer;\n  }\n  .gallery-media{\n    height:120px; display:flex; align-items:center; justify-content:center;\n    font-size:40px; color:#fff; position:relative; overflow:hidden;\n  }\n  .gallery-kind{\n    position:absolute; top:8px; right:8px; background:rgba(0,0,0,.4); color:#fff;\n    font-size:10px; padding:3px 8px; border-radius:999px; font-weight:700;\n  }\n  .gallery-body{ padding:10px 12px 12px; }\n  .gallery-title{ font-size:12.5px; font-weight:700; color:#fff; margin:0 0 3px; }\n  .gallery-caption{ font-size:11.5px; color:#B9C2D0; margin:0; line-height:1.5; }\n  .gallery-nav{ display:flex; justify-content:flex-end; gap:8px; margin-top:8px; }\n  .gallery-nav button{\n    width:30px; height:30px; border-radius:50%; border:none; background:#FFEEE2;\n    color:var(--accent-dark); font-weight:800; cursor:pointer;\n  }\n\n  .cta{ background:linear-gradient(135deg,var(--accent),var(--accent-dark)); color:#fff; border-radius:16px; padding:18px; text-align:center; margin-bottom:8px; }\n  .cta p{ font-size:14px; line-height:1.7; margin:0 0 4px; }\n  .cta .sub{ font-size:12px; opacity:.85; }\n  .qr-slot{ border:2px dashed rgba(255,255,255,.6); border-radius:10px; padding:10px; margin-top:10px; font-size:11px; opacity:.9; }\n  footer{ text-align:center; font-size:11px; color:var(--gray); margin-top:16px; }\n  .hidden{ display:none; }\n</style>\n</head>\n<body>\n<div class=\"app\">\n\n  <!-- スタート画面 -->\n  <div id=\"screen-start\" class=\"card\">\n    <div class=\"badge\">SCHOOL SHINDAN</div>\n    <h1 id=\"startTitle\"></h1>\n    <p class=\"lead\" id=\"startLead\"></p>\n    <button class=\"btn\" id=\"startBtn\" onclick=\"startQuiz()\"></button>\n  </div>\n\n  <!-- 質問画面 -->\n  <div id=\"screen-quiz\" class=\"card hidden\">\n    <div class=\"progress-wrap\"><div class=\"progress-bar\" id=\"progressBar\" style=\"width:0%\"></div></div>\n    <div class=\"qnum\" id=\"qnum\"></div>\n    <div class=\"question\" id=\"qtext\"></div>\n    <div id=\"choices\"></div>\n  </div>\n\n  <!-- 結果画面 -->\n  <div id=\"screen-result\" class=\"card hidden\">\n    <div class=\"badge\">診断結果</div>\n    <div class=\"type-icon\" id=\"resultIcon\"></div>\n    <div class=\"type-name\" id=\"resultType\"></div>\n    <p class=\"type-quote\" id=\"resultQuote\"></p>\n    <div class=\"course-name\" id=\"resultCourseTag\"></div>\n    <p class=\"desc\" id=\"resultDesc\"></p>\n\n    <div class=\"course-box\">\n      <div class=\"label\">おすすめコース</div>\n      <p id=\"resultCourseDesc\"></p>\n    </div>\n\n    <div class=\"chart\">\n      <div class=\"section-title\">📊 コース別 適性データ</div>\n      <p style=\"font-size:11px;color:var(--gray);margin:-4px 0 12px;\">6つの興味タイプの回答傾向から算出</p>\n      <div id=\"chartRows\"></div>\n    </div>\n\n    <div class=\"gallery-wrap\">\n      <div class=\"section-title\">🎬 先輩の作品をチラ見せ（スワイプ↔️）</div>\n      <div class=\"gallery-scroll\" id=\"galleryScroll\"></div>\n      <div class=\"gallery-nav\">\n        <button onclick=\"scrollGallery(-1)\">‹</button>\n        <button onclick=\"scrollGallery(1)\">›</button>\n      </div>\n    </div>\n\n    <div class=\"cta\">\n      <p id=\"ctaMessage\"></p>\n      <p class=\"sub\" id=\"ctaSub\"></p>\n      <div class=\"qr-slot\" id=\"qrSlot\">［ここにQRコード・URLを貼り付け］</div>\n    </div>\n\n    <button class=\"btn secondary\" id=\"restartBtn\" onclick=\"restartQuiz()\"></button>\n  </div>\n\n  <footer>Life is Tech! Camp オリジナルコンテンツ</footer>\n</div>\n\n<script type=\"application/json\" id=\"quiz-config\">__CONFIG_JSON_PLACEHOLDER__<\/script>\n<script>\n// このスクリプトは上の <script id=\"quiz-config\"> に埋め込まれたJSONだけを見て動く。\n// 質問・コース・タイプ・ギャラリー・QRなどの中身を変えたい場合は admin.html で編集して\n// 「完成したHTMLをダウンロード」した新しいファイルに差し替えること（このファイルを直接編集しない）。\nconst CONFIG = JSON.parse(document.getElementById('quiz-config').textContent);\nconst RIASEC_LETTERS = [\"R\",\"I\",\"A\",\"S\",\"E\",\"C\"];\n\nfunction escapeHtml(str){\n  return String(str).replace(/[&<>\"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;',\"'\":'&#39;'}[ch]));\n}\n\nfunction applyStaticUi(){\n  document.getElementById('startTitle').innerHTML = CONFIG.ui.startTitle;\n  document.getElementById('startLead').textContent = CONFIG.ui.startLead;\n  document.getElementById('startBtn').textContent = CONFIG.ui.startButton;\n  document.getElementById('restartBtn').textContent = CONFIG.ui.restartButton;\n  document.getElementById('ctaMessage').innerHTML = CONFIG.ui.cta.message;\n  document.getElementById('ctaSub').textContent = CONFIG.ui.cta.sub;\n  renderQrSlot();\n}\n\nfunction renderQrSlot(){\n  const el = document.getElementById('qrSlot');\n  const qr = CONFIG.ui.qr || {};\n  if(!qr.imageUrl && !qr.linkUrl){\n    el.textContent = \"［ここにQRコード・URLを貼り付け］\";\n    return;\n  }\n  let html = \"\";\n  if(qr.imageUrl) html += `<img src=\"${escapeHtml(qr.imageUrl)}\" alt=\"QRコード\" style=\"max-width:100%;border-radius:8px;margin-bottom:8px;\">`;\n  if(qr.linkUrl) html += `<a href=\"${escapeHtml(qr.linkUrl)}\" target=\"_blank\" rel=\"noopener\" style=\"color:#fff;font-weight:700;text-decoration:underline;\">${escapeHtml(qr.linkText || qr.linkUrl)}</a>`;\n  el.innerHTML = html;\n}\n\nlet current = 0;\nlet riasec = {};\nlet sequence = [];\n\n// 診断（RIASEC採点）とは無関係な「ボーナス質問」を、指定された位置に挟み込んだ\n// 出題順を組み立てる。afterQuestion:0 = 最初の質問より前、N = 元のN問目の直後。\n// スコアには一切影響しない（answer()ではなくadvance()だけを呼ぶ）。\nfunction buildSequence(){\n  const seq = [];\n  const byPosition = {};\n  (CONFIG.bonusQuestions||[]).forEach(bq=>{\n    const pos = Math.max(0, Math.min(CONFIG.questions.length, Number(bq.afterQuestion)||0));\n    (byPosition[pos] = byPosition[pos] || []).push(bq);\n  });\n  (byPosition[0]||[]).forEach(bq=> seq.push({ type:\"bonus\", data:bq }));\n  CONFIG.questions.forEach((q, idx)=>{\n    seq.push({ type:\"real\", data:q });\n    (byPosition[idx+1]||[]).forEach(bq=> seq.push({ type:\"bonus\", data:bq }));\n  });\n  return seq;\n}\n\nfunction startQuiz(){\n  current = 0;\n  riasec = {}; RIASEC_LETTERS.forEach(l=> riasec[l]=0);\n  sequence = buildSequence();\n  document.getElementById(\"screen-start\").classList.add(\"hidden\");\n  document.getElementById(\"screen-result\").classList.add(\"hidden\");\n  document.getElementById(\"screen-quiz\").classList.remove(\"hidden\");\n  renderQuestion();\n}\n\nfunction renderQuestion(){\n  const item = sequence[current];\n  document.getElementById(\"qnum\").textContent = \"Q\" + (current+1) + \" / \" + sequence.length;\n  document.getElementById(\"progressBar\").style.width = ((current)/sequence.length*100) + \"%\";\n  const choicesEl = document.getElementById(\"choices\");\n  choicesEl.innerHTML = \"\";\n\n  if(item.type === \"bonus\"){\n    document.getElementById(\"qtext\").textContent = item.data.q;\n    (item.data.opts||[]).forEach(text=>{\n      const btn = document.createElement(\"div\");\n      btn.className = \"choice\";\n      btn.textContent = text;\n      btn.onclick = ()=> advance();\n      choicesEl.appendChild(btn);\n    });\n    return;\n  }\n\n  const q = item.data;\n  document.getElementById(\"qtext\").textContent = q.q;\n  q.opts.forEach((text, i)=>{\n    const letter = RIASEC_LETTERS[i];\n    const btn = document.createElement(\"div\");\n    btn.className = \"choice\";\n    btn.textContent = text;\n    btn.onclick = ()=> answer(letter);\n    choicesEl.appendChild(btn);\n  });\n}\n\nfunction advance(){\n  current++;\n  if(current >= sequence.length){\n    showResult();\n  } else {\n    renderQuestion();\n  }\n}\n\nfunction answer(letter){\n  riasec[letter]++;\n  advance();\n}\n\nfunction toEmbeddableVideoUrl(url){\n  const yt = url.match(/(?:youtu\\.be\\/|youtube\\.com\\/watch\\?v=|youtube\\.com\\/embed\\/)([\\w-]{6,})/);\n  if(yt) return \"https://www.youtube.com/embed/\" + yt[1];\n  return null;\n}\n\nfunction showResult(){\n  document.getElementById(\"progressBar\").style.width = \"100%\";\n\n  // コース別スコア = 回答者のRIASEC得点 × 各コースの重み の内積\n  const courseScore = {};\n  CONFIG.courses.forEach(c=>{\n    let s = 0;\n    RIASEC_LETTERS.forEach(letter=>{ s += (riasec[letter]||0) * (c.weights[letter]||0); });\n    courseScore[c.key] = s;\n  });\n\n  let best = CONFIG.courses[0];\n  CONFIG.courses.forEach(c=>{ if(courseScore[c.key] > courseScore[best.key]) best = c; });\n\n  // フレーバー軸：E+S(対人・行動力寄り) vs C+I(分析・秩序寄り)\n  const hotScore = (riasec.E||0) + (riasec.S||0);\n  const coolScore = (riasec.C||0) + (riasec.I||0);\n  const style = hotScore >= coolScore ? \"hot\" : \"cool\";\n  const t = best[style];\n\n  const iconEl = document.getElementById(\"resultIcon\");\n  if(t.imageUrl){\n    iconEl.innerHTML = `<img src=\"${escapeHtml(t.imageUrl)}\" alt=\"${escapeHtml(t.name||'')}\">`;\n  } else {\n    iconEl.textContent = t.icon;\n  }\n  document.getElementById(\"resultType\").textContent = t.name;\n  document.getElementById(\"resultQuote\").textContent = t.quote;\n  document.getElementById(\"resultCourseTag\").textContent = \"おすすめ: \" + best.label + \"コース\";\n  document.getElementById(\"resultDesc\").textContent = t.desc;\n  document.getElementById(\"resultCourseDesc\").textContent = best.desc;\n\n  // 適性%グラフ：コーススコア ÷ (そのコースの最大重み × 設問数) を基本に、5〜99%でクリップ\n  const ranked = [...CONFIG.courses].sort((x,y)=> courseScore[y.key]-courseScore[x.key]);\n  const chartEl = document.getElementById(\"chartRows\");\n  chartEl.innerHTML = \"\";\n  ranked.forEach(c=>{\n    const maxWeight = Math.max(1, ...RIASEC_LETTERS.map(l=> c.weights[l]||0));\n    const maxPossible = maxWeight * CONFIG.questions.length;\n    const pct = Math.min(99, Math.max(5, Math.round(courseScore[c.key]/maxPossible*100)));\n    const row = document.createElement(\"div\");\n    row.className = \"chart-row\" + (c.key===best.key ? \" top\" : \"\");\n    row.innerHTML = `\n      <div class=\"chart-labels\"><span>${escapeHtml(c.label)}</span><span class=\"pct\">${pct}%</span></div>\n      <div class=\"chart-track\"><div class=\"chart-fill\" style=\"width:${pct}%\"></div></div>`;\n    chartEl.appendChild(row);\n  });\n\n  // 先輩作品ギャラリー\n  const galEl = document.getElementById(\"galleryScroll\");\n  galEl.innerHTML = \"\";\n  (best.gallery||[]).forEach(item=>{\n    const card = document.createElement(\"div\");\n    card.className = \"gallery-card\";\n    let mediaHtml;\n    if(item.mediaType === \"image\" && item.mediaUrl){\n      mediaHtml = `<img src=\"${escapeHtml(item.mediaUrl)}\" alt=\"${escapeHtml(item.title||'')}\" style=\"width:100%;height:100%;object-fit:cover;\">`;\n    } else if(item.mediaType === \"video\" && item.mediaUrl){\n      const embed = toEmbeddableVideoUrl(item.mediaUrl);\n      mediaHtml = embed\n        ? `<iframe src=\"${escapeHtml(embed)}\" style=\"width:100%;height:100%;border:0;\" allowfullscreen></iframe>`\n        : `<video src=\"${escapeHtml(item.mediaUrl)}\" controls style=\"width:100%;height:100%;object-fit:cover;\"></video>`;\n    } else {\n      mediaHtml = escapeHtml(item.icon || \"🎬\");\n    }\n    card.innerHTML = `\n      <div class=\"gallery-media\">${mediaHtml}<span class=\"gallery-kind\">${escapeHtml(item.kind||\"\")}</span></div>\n      <div class=\"gallery-body\">\n        <p class=\"gallery-title\">${escapeHtml(item.title||\"\")}</p>\n        <p class=\"gallery-caption\">${escapeHtml(item.caption||\"\")}</p>\n      </div>`;\n    galEl.appendChild(card);\n  });\n\n  document.getElementById(\"screen-quiz\").classList.add(\"hidden\");\n  document.getElementById(\"screen-result\").classList.remove(\"hidden\");\n}\n\nfunction scrollGallery(dir){\n  const el = document.getElementById(\"galleryScroll\");\n  el.scrollBy({ left: dir * el.clientWidth * 0.8, behavior:\"smooth\" });\n}\n\nfunction restartQuiz(){\n  document.getElementById(\"screen-quiz\").classList.add(\"hidden\");\n  document.getElementById(\"screen-result\").classList.add(\"hidden\");\n  document.getElementById(\"screen-start\").classList.remove(\"hidden\");\n}\n\napplyStaticUi();\n<\/script>\n</body>\n</html>\n";
+
+function buildFinalHtml(){
+  // 共通版（ボーナス質問なし）。会場ごとのボーナス質問入りは buildVenueHtml() を使う。
+  const exportConfig = { ui: config.ui, questions: config.questions, courses: config.courses };
+  return TEMPLATE_HTML.replace('__CONFIG_JSON_PLACEHOLDER__', JSON.stringify(exportConfig, null, 2));
+}
+function previewQuiz(){
+  const blob = new Blob([buildFinalHtml()], {type:'text/html'});
+  const url = URL.createObjectURL(blob);
+  window.open(url, '_blank');
+}
+function downloadQuiz(){
+  const blob = new Blob([buildFinalHtml()], {type:'text/html'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = 'school_shindan.html';
+  document.body.appendChild(a); a.click(); a.remove();
+  URL.revokeObjectURL(url);
+}
+
+renderAll();
+</script>
+</body>
+</html>

@@ -1,0 +1,786 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>スクール診断 | Life is Tech!</title>
+<style>
+  :root{
+    --accent:#FF5722;
+    --accent-dark:#E64A19;
+    --navy:#1A2332;
+    --bg:#FFF8F3;
+    --card:#FFFFFF;
+    --gray:#6B7280;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    font-family:"Hiragino Kaku Gothic ProN","Hiragino Sans","Yu Gothic",sans-serif;
+    background:linear-gradient(180deg,var(--bg) 0%,#FFEEE2 100%);
+    color:var(--navy);
+    min-height:100vh;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:16px;
+  }
+  .app{ width:100%; max-width:480px; }
+  .card{
+    background:var(--card);
+    border-radius:24px;
+    box-shadow:0 8px 30px rgba(26,35,50,0.12);
+    padding:32px 24px;
+    text-align:center;
+  }
+  .badge{
+    display:inline-block;
+    background:var(--accent);
+    color:#fff;
+    font-size:12px;
+    font-weight:700;
+    letter-spacing:0.05em;
+    padding:6px 14px;
+    border-radius:999px;
+    margin-bottom:16px;
+  }
+  h1{ font-size:22px; margin:0 0 8px; line-height:1.4; }
+  p.lead{ color:var(--gray); font-size:14px; line-height:1.7; margin:0 0 24px; }
+  .btn{
+    display:block; width:100%; background:var(--accent); color:#fff;
+    border:none; border-radius:14px; padding:16px; font-size:16px; font-weight:700;
+    cursor:pointer; margin-top:12px; transition:transform .1s, background .2s;
+  }
+  .btn:active{ transform:scale(0.97); }
+  .btn:hover{ background:var(--accent-dark); }
+  .btn.secondary{ background:transparent; color:var(--accent); border:2px solid var(--accent); }
+  .progress-wrap{ height:8px; background:#F0E4DC; border-radius:999px; overflow:hidden; margin-bottom:20px; }
+  .progress-bar{ height:100%; background:var(--accent); border-radius:999px; transition:width .3s ease; }
+  .qnum{ font-size:13px; color:var(--gray); font-weight:700; margin-bottom:6px; }
+  .question{ font-size:18px; font-weight:700; line-height:1.5; margin-bottom:20px; }
+  .choice{
+    display:flex; align-items:center; text-align:left; width:100%;
+    background:#FFF8F3; border:2px solid transparent; border-radius:14px;
+    padding:14px 16px; font-size:15px; color:var(--navy); margin-bottom:10px;
+    cursor:pointer; transition:all .15s;
+  }
+  .choice:hover{ border-color:var(--accent); background:#FFEEE2; }
+  .type-icon{ font-size:56px; margin-bottom:8px; }
+  .type-icon img{ width:110px; height:110px; object-fit:cover; border-radius:20px; }
+  .type-name{ font-size:24px; font-weight:800; color:var(--accent-dark); margin:0 0 2px; }
+  .type-quote{ font-size:13px; color:var(--gray); font-style:italic; margin:0 0 14px; }
+  .course-name{
+    font-size:15px; font-weight:700; background:#FFEEE2; color:var(--accent-dark);
+    display:inline-block; padding:6px 16px; border-radius:999px; margin-bottom:16px;
+  }
+  .desc{ font-size:14px; line-height:1.8; color:var(--navy); text-align:left; margin-bottom:16px; }
+  .course-box{ background:var(--navy); color:#fff; border-radius:16px; padding:18px; text-align:left; margin-bottom:20px; }
+  .course-box .label{ font-size:11px; color:#FFB08A; font-weight:700; letter-spacing:.05em; margin-bottom:6px; }
+  .course-box p{ font-size:13.5px; line-height:1.7; margin:0; color:#E5E9F0; }
+
+  .section-title{
+    font-size:13px; font-weight:800; color:var(--navy); text-align:left;
+    margin:0 0 10px; display:flex; align-items:center; gap:6px;
+  }
+  .chart{ text-align:left; margin-bottom:22px; }
+  .chart-row{ margin-bottom:10px; }
+  .chart-labels{ display:flex; justify-content:space-between; font-size:12.5px; font-weight:700; margin-bottom:4px; }
+  .chart-labels .pct{ color:var(--accent-dark); }
+  .chart-track{ height:10px; background:#F0E4DC; border-radius:999px; overflow:hidden; }
+  .chart-fill{ height:100%; border-radius:999px; background:linear-gradient(90deg,var(--accent),var(--accent-dark)); transition:width .6s ease; }
+  .chart-row.top .chart-labels{ color:var(--accent-dark); }
+
+  .gallery-wrap{ margin-bottom:22px; }
+  .gallery-scroll{
+    display:flex; gap:12px; overflow-x:auto; scroll-snap-type:x mandatory;
+    padding-bottom:6px; -webkit-overflow-scrolling:touch;
+  }
+  .gallery-scroll::-webkit-scrollbar{ height:5px; }
+  .gallery-scroll::-webkit-scrollbar-thumb{ background:#F0C9B5; border-radius:999px; }
+  .gallery-card{
+    flex:0 0 78%; scroll-snap-align:start; border-radius:16px; overflow:hidden;
+    background:var(--navy); text-align:left; cursor:pointer;
+  }
+  .gallery-media{
+    height:120px; display:flex; align-items:center; justify-content:center;
+    font-size:40px; color:#fff; position:relative; overflow:hidden;
+  }
+  .gallery-kind{
+    position:absolute; top:8px; right:8px; background:rgba(0,0,0,.4); color:#fff;
+    font-size:10px; padding:3px 8px; border-radius:999px; font-weight:700;
+  }
+  .gallery-body{ padding:10px 12px 12px; }
+  .gallery-title{ font-size:12.5px; font-weight:700; color:#fff; margin:0 0 3px; }
+  .gallery-caption{ font-size:11.5px; color:#B9C2D0; margin:0; line-height:1.5; }
+  .gallery-nav{ display:flex; justify-content:flex-end; gap:8px; margin-top:8px; }
+  .gallery-nav button{
+    width:30px; height:30px; border-radius:50%; border:none; background:#FFEEE2;
+    color:var(--accent-dark); font-weight:800; cursor:pointer;
+  }
+
+  .cta{ background:linear-gradient(135deg,var(--accent),var(--accent-dark)); color:#fff; border-radius:16px; padding:18px; text-align:center; margin-bottom:8px; }
+  .cta p{ font-size:14px; line-height:1.7; margin:0 0 4px; }
+  .cta .sub{ font-size:12px; opacity:.85; }
+  .qr-slot{ border:2px dashed rgba(255,255,255,.6); border-radius:10px; padding:10px; margin-top:10px; font-size:11px; opacity:.9; }
+  footer{ text-align:center; font-size:11px; color:var(--gray); margin-top:16px; }
+  .hidden{ display:none; }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- スタート画面 -->
+  <div id="screen-start" class="card">
+    <div class="badge">SCHOOL SHINDAN</div>
+    <h1 id="startTitle"></h1>
+    <p class="lead" id="startLead"></p>
+    <button class="btn" id="startBtn" onclick="startQuiz()"></button>
+  </div>
+
+  <!-- 質問画面 -->
+  <div id="screen-quiz" class="card hidden">
+    <div class="progress-wrap"><div class="progress-bar" id="progressBar" style="width:0%"></div></div>
+    <div class="qnum" id="qnum"></div>
+    <div class="question" id="qtext"></div>
+    <div id="choices"></div>
+  </div>
+
+  <!-- 結果画面 -->
+  <div id="screen-result" class="card hidden">
+    <div class="badge">診断結果</div>
+    <div class="type-icon" id="resultIcon"></div>
+    <div class="type-name" id="resultType"></div>
+    <p class="type-quote" id="resultQuote"></p>
+    <div class="course-name" id="resultCourseTag"></div>
+    <p class="desc" id="resultDesc"></p>
+
+    <div class="course-box">
+      <div class="label">おすすめコース</div>
+      <p id="resultCourseDesc"></p>
+    </div>
+
+    <div class="chart">
+      <div class="section-title">📊 コース別 適性データ</div>
+      <p style="font-size:11px;color:var(--gray);margin:-4px 0 12px;">6つの興味タイプの回答傾向から算出</p>
+      <div id="chartRows"></div>
+    </div>
+
+    <div class="gallery-wrap">
+      <div class="section-title">🎬 先輩の作品をチラ見せ（スワイプ↔️）</div>
+      <div class="gallery-scroll" id="galleryScroll"></div>
+      <div class="gallery-nav">
+        <button onclick="scrollGallery(-1)">‹</button>
+        <button onclick="scrollGallery(1)">›</button>
+      </div>
+    </div>
+
+    <div class="cta">
+      <p id="ctaMessage"></p>
+      <p class="sub" id="ctaSub"></p>
+      <div class="qr-slot" id="qrSlot">［ここにQRコード・URLを貼り付け］</div>
+    </div>
+
+    <button class="btn secondary" id="restartBtn" onclick="restartQuiz()"></button>
+  </div>
+
+  <footer>Life is Tech! Camp オリジナルコンテンツ</footer>
+</div>
+
+<script type="application/json" id="quiz-config">{
+  "ui": {
+    "startTitle": "本気度低めで<br>ぶっちゃける<br>スクール診断",
+    "startLead": "全12問、直感で答えるだけ。あなたの「つくるキャラ」と、ライフイズテック スクールのおすすめコース＆適性%がわかっちゃいます。所要時間 約3〜4分。",
+    "startButton": "診断をはじめる",
+    "restartButton": "もう一度診断する",
+    "cta": {
+      "message": "もっと本気で\"つくる\"を続けたくなったら、<br><strong>ライフイズテック スクール</strong>で待ってるよ！",
+      "sub": "詳しくはスタッフに聞いてみよう"
+    },
+    "qr": {
+      "imageUrl": "",
+      "linkUrl": "",
+      "linkText": ""
+    }
+  },
+  "questions": [
+    {
+      "q": "放課後、時間ができたら真っ先にやりたいことは？",
+      "opts": [
+        "何か工作したり、ガジェットをいじる",
+        "気になることを深掘りして調べる",
+        "絵を描いたり、何か表現する",
+        "友達とおしゃべりしたり相談に乗る",
+        "新しい企画を思いついてみんなを誘う",
+        "やることリストを整理してスケジュールを組む"
+      ]
+    },
+    {
+      "q": "グループ課題で自然と担当しているのは？",
+      "opts": [
+        "実際に手を動かして組み立てる係",
+        "データや資料を集めて分析する係",
+        "デザインや世界観を考える係",
+        "みんなの意見をまとめて調整する係",
+        "進行役・リーダーとして引っ張る係",
+        "提出物の体裁やフォーマットを整える係"
+      ]
+    },
+    {
+      "q": "好きな教科・得意なことは？",
+      "opts": [
+        "技術・家庭科（実際に作る）",
+        "理科・数学（仕組みを解明する）",
+        "美術・音楽（表現する）",
+        "道徳・国語（人の気持ちを考える）",
+        "社会・弁論（人を説得する）",
+        "情報整理・記録的な作業"
+      ]
+    },
+    {
+      "q": "休み時間の過ごし方は？",
+      "opts": [
+        "何かを分解したり組み立てたりする",
+        "疑問に思ったことをネットで調べる",
+        "落書きや妄想の世界に浸る",
+        "友達とワイワイ話す",
+        "場を盛り上げる企画を考える",
+        "持ち物や机の中を整理する"
+      ]
+    },
+    {
+      "q": "SNSでついつい見ちゃうのは？",
+      "opts": [
+        "DIY・ガジェットレビュー系",
+        "考察・雑学・検証系",
+        "イラスト・写真・二次創作系",
+        "友達やインフルエンサーの日常系",
+        "成功者・起業家・トレンド系",
+        "ライフハック・整理術系"
+      ]
+    },
+    {
+      "q": "文化祭・学校行事で本領発揮するのは？",
+      "opts": [
+        "大道具・装置づくり",
+        "出し物の仕組みや企画の裏付け調査",
+        "装飾・世界観づくり",
+        "来場者やクラスメイトへの対応",
+        "企画の音頭を取って人を巻き込む",
+        "全体の進行表・タイムスケジュール管理"
+      ]
+    },
+    {
+      "q": "欲しいものが売っていなかったら？",
+      "opts": [
+        "自分で作れないか試してみる",
+        "なぜ売ってないのか理由を調べる",
+        "「無いなら想像で楽しもう」と考える",
+        "友達に聞いて情報を集める",
+        "「これ商売になりそう」と考える",
+        "代わりになる条件を整理して探す"
+      ]
+    },
+    {
+      "q": "将来「これならずっとできる」と思うのは？",
+      "opts": [
+        "手に職をつけて何かを作り続ける仕事",
+        "謎や課題を研究し続ける仕事",
+        "表現し続けるクリエイティブな仕事",
+        "人を支える・教える仕事",
+        "自分で何かを立ち上げて動かす仕事",
+        "正確さが求められる仕事"
+      ]
+    },
+    {
+      "q": "テストの点数より、実は嬉しいのは？",
+      "opts": [
+        "実技や作品を仕上げてできた達成感",
+        "難問を解き明かせたこと",
+        "独創的な発想を褒められたこと",
+        "友達と支え合えたこと",
+        "リーダーシップを発揮できたこと",
+        "計画通り完璧にこなせたこと"
+      ]
+    },
+    {
+      "q": "一番「褒められて嬉しい」ポイントは？",
+      "opts": [
+        "手先の器用さ・行動力",
+        "頭の回転の速さ・分析力",
+        "発想力・センス",
+        "気配り・コミュ力",
+        "巻き込み力・度胸",
+        "几帳面さ・正確さ"
+      ]
+    },
+    {
+      "q": "もし超能力が1つ使えるなら？",
+      "opts": [
+        "どんな道具も一瞬で作れる力",
+        "どんな謎も一瞬で解ける力",
+        "想像したものを実体化させる力",
+        "相手の気持ちが分かる力",
+        "どんな人も味方にできる力",
+        "すべてを完璧に整理整頓できる力"
+      ]
+    },
+    {
+      "q": "部活・習い事を選ぶなら？",
+      "opts": [
+        "モノづくり系（技術系の部活）",
+        "研究・科学系（科学部など）",
+        "芸術・表現系（美術・軽音など）",
+        "チーム協力系（人と関わる部活）",
+        "生徒会・企画運営系",
+        "記録・管理系（会計・書記など）"
+      ]
+    }
+  ],
+  "courses": [
+    {
+      "key": "a",
+      "label": "iPhoneアプリ",
+      "desc": "iPhoneアプリコースでは、Swiftというプログラミング言語を使って、あなたのアイデアを本物のiPhoneアプリとして開発。ストアリリースを目指します。",
+      "weights": {
+        "I": 2,
+        "R": 1
+      },
+      "hot": {
+        "icon": "⚡",
+        "name": "ひらめき番長",
+        "quote": "「あ、それ作れば解決じゃん」が口癖。",
+        "desc": "頭の中は常にひらめきの花火大会。友達の「不便だな〜」を聞いた瞬間、もう解決策を考え始めている行動力オバケタイプ。"
+      },
+      "cool": {
+        "icon": "🔍",
+        "name": "隠れ発明家",
+        "quote": "目立たないけど、気づけば周りのMVP。",
+        "desc": "誰も気づかない「地味に困ってること」を、こっそり解決しているタイプ。派手さはないが実は一番「デキる」人かも。"
+      },
+      "gallery": [
+        {
+          "mediaType": "none",
+          "mediaUrl": "",
+          "icon": "📱",
+          "kind": "画像",
+          "title": "ジャンル：生活お助けアプリ",
+          "caption": "先輩作品例：忘れ物防止リマインダーアプリ"
+        },
+        {
+          "mediaType": "none",
+          "mediaUrl": "",
+          "icon": "🎬",
+          "kind": "動画",
+          "title": "制作の裏側インタビュー",
+          "caption": "（差し替え用スロット：先輩の制作秘話動画）"
+        },
+        {
+          "mediaType": "none",
+          "mediaUrl": "",
+          "icon": "📱",
+          "kind": "画像",
+          "title": "ジャンル：ちょいゲームアプリ",
+          "caption": "先輩作品例：反射神経タイミングゲーム"
+        }
+      ]
+    },
+    {
+      "key": "b",
+      "label": "Androidアプリ",
+      "desc": "Androidアプリコースでは、Javaを使ってロジックを組み立てながら、世界中のAndroid端末で動くアプリを開発します。",
+      "weights": {
+        "C": 2,
+        "I": 1
+      },
+      "hot": {
+        "icon": "🔥",
+        "name": "理論バトル系主人公",
+        "quote": "「それ、こうすればもっと速いよ」",
+        "desc": "気づけば友達の宿題まで効率化してしまう。頭の回転の速さで周りを圧倒する、ロジック系バトル漫画の主人公タイプ。"
+      },
+      "cool": {
+        "icon": "♟️",
+        "name": "静かなる軍師",
+        "quote": "騒がず、慌てず、もう作戦は完成している。",
+        "desc": "表には出ないが、頭の中では既に完璧な作戦が組み上がっている。気づいたら場を仕切っている参謀タイプ。"
+      },
+      "gallery": [
+        {
+          "mediaType": "none",
+          "mediaUrl": "",
+          "icon": "🤖",
+          "kind": "画像",
+          "title": "ジャンル：学習サポートアプリ",
+          "caption": "先輩作品例：単語暗記アプリ"
+        },
+        {
+          "mediaType": "none",
+          "mediaUrl": "",
+          "icon": "🎬",
+          "kind": "動画",
+          "title": "開発の裏側インタビュー",
+          "caption": "（差し替え用スロット：先輩の制作秘話動画）"
+        },
+        {
+          "mediaType": "none",
+          "mediaUrl": "",
+          "icon": "🤖",
+          "kind": "画像",
+          "title": "ジャンル：診断・計算アプリ",
+          "caption": "先輩作品例：おこづかい管理アプリ"
+        }
+      ]
+    },
+    {
+      "key": "c",
+      "label": "Unityゲーム",
+      "desc": "Unityゲームコースでは、C#を使って自分の世界観を詰め込んだ本格3Dゲームを開発します。",
+      "weights": {
+        "A": 2,
+        "E": 1
+      },
+      "hot": {
+        "icon": "🐉",
+        "name": "異世界建国主",
+        "quote": "設定資料、勝手に3つくらい増える。",
+        "desc": "頭の中に既にいくつも世界が存在している。放っておくと世界観と裏設定がどんどん増殖していくタイプ。"
+      },
+      "cool": {
+        "icon": "🌙",
+        "name": "静寂の世界観職人",
+        "quote": "派手さより、深さで魅せる。",
+        "desc": "じっくり練り込まれた世界観で、気づけば周りも引き込まれている。物静かだけど中身は壮大なタイプ。"
+      },
+      "gallery": [
+        {
+          "mediaType": "none",
+          "mediaUrl": "",
+          "icon": "🎮",
+          "kind": "動画",
+          "title": "3Dアクションゲーム",
+          "caption": "先輩作品例：迷路脱出3Dゲーム"
+        },
+        {
+          "mediaType": "none",
+          "mediaUrl": "",
+          "icon": "🎬",
+          "kind": "動画",
+          "title": "制作の裏側インタビュー",
+          "caption": "（差し替え用スロット：先輩の制作秘話動画）"
+        },
+        {
+          "mediaType": "none",
+          "mediaUrl": "",
+          "icon": "🎮",
+          "kind": "画像",
+          "title": "世界観デザイン画",
+          "caption": "先輩作品例：オリジナルRPGの世界観設定"
+        }
+      ]
+    },
+    {
+      "key": "d",
+      "label": "Webデザイン",
+      "desc": "Webデザインコースでは、デザイン理論とコーディングを学び、見る人を惹きつけるWebサイトを制作します。",
+      "weights": {
+        "A": 2,
+        "C": 1
+      },
+      "hot": {
+        "icon": "📸",
+        "name": "映え番長",
+        "quote": "とにかく「映え」を求めて生きている。",
+        "desc": "カメラロールの9割がイメージ収集フォルダ。センスと勢いで一気に仕上げるタイプ。"
+      },
+      "cool": {
+        "icon": "✨",
+        "name": "美意識モンスター",
+        "quote": "1pxのズレも許さない。",
+        "desc": "細部までこだわり抜く、静かな完璧主義者。誰も気づかない部分にまでこだわりが宿るタイプ。"
+      },
+      "gallery": [
+        {
+          "mediaType": "none",
+          "mediaUrl": "",
+          "icon": "🖥️",
+          "kind": "画像",
+          "title": "作品：ポートフォリオサイト",
+          "caption": "先輩作品例：自己紹介Webサイト"
+        },
+        {
+          "mediaType": "none",
+          "mediaUrl": "",
+          "icon": "🎬",
+          "kind": "動画",
+          "title": "制作の裏側インタビュー",
+          "caption": "（差し替え用スロット：先輩の制作秘話動画）"
+        },
+        {
+          "mediaType": "none",
+          "mediaUrl": "",
+          "icon": "🖥️",
+          "kind": "画像",
+          "title": "作品：ブランドサイト風デザイン",
+          "caption": "先輩作品例：架空カフェのWebサイト"
+        }
+      ]
+    },
+    {
+      "key": "e",
+      "label": "Webサービス",
+      "desc": "Webサービスコースでは、Ruby on Railsなどを使い、たくさんの人が使えるWebサービスを開発します。",
+      "weights": {
+        "S": 2,
+        "E": 1
+      },
+      "hot": {
+        "icon": "🎤",
+        "name": "陽キャホスト部部長",
+        "quote": "初対面でも5分で友達になれる。",
+        "desc": "人と人をつなぐのが得意中の得意。気づけばその場のムードメーカーになっているタイプ。"
+      },
+      "cool": {
+        "icon": "🕸️",
+        "name": "縁の下のコネクター",
+        "quote": "目立たないけど、人間関係のハブ。",
+        "desc": "表には出ないが、気づけばクラスや友達グループの調整役になっている、信頼される黒子タイプ。"
+      },
+      "gallery": [
+        {
+          "mediaType": "none",
+          "mediaUrl": "",
+          "icon": "🌐",
+          "kind": "画像",
+          "title": "作品：掲示板・マッチングサービス",
+          "caption": "先輩作品例：部活動マッチングサービス"
+        },
+        {
+          "mediaType": "none",
+          "mediaUrl": "",
+          "icon": "🎬",
+          "kind": "動画",
+          "title": "制作の裏側インタビュー",
+          "caption": "（差し替え用スロット：先輩の制作秘話動画）"
+        },
+        {
+          "mediaType": "none",
+          "mediaUrl": "",
+          "icon": "🌐",
+          "kind": "画像",
+          "title": "作品：投稿共有サービス",
+          "caption": "先輩作品例：写真共有アプリ"
+        }
+      ]
+    }
+  ]
+}</script>
+<script>
+// このスクリプトは上の <script id="quiz-config"> に埋め込まれたJSONだけを見て動く。
+// 質問・コース・タイプ・ギャラリー・QRなどの中身を変えたい場合は admin.html で編集して
+// 「完成したHTMLをダウンロード」した新しいファイルに差し替えること（このファイルを直接編集しない）。
+const CONFIG = JSON.parse(document.getElementById('quiz-config').textContent);
+const RIASEC_LETTERS = ["R","I","A","S","E","C"];
+
+function escapeHtml(str){
+  return String(str).replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+}
+
+function applyStaticUi(){
+  document.getElementById('startTitle').innerHTML = CONFIG.ui.startTitle;
+  document.getElementById('startLead').textContent = CONFIG.ui.startLead;
+  document.getElementById('startBtn').textContent = CONFIG.ui.startButton;
+  document.getElementById('restartBtn').textContent = CONFIG.ui.restartButton;
+  document.getElementById('ctaMessage').innerHTML = CONFIG.ui.cta.message;
+  document.getElementById('ctaSub').textContent = CONFIG.ui.cta.sub;
+  renderQrSlot();
+}
+
+function renderQrSlot(){
+  const el = document.getElementById('qrSlot');
+  const qr = CONFIG.ui.qr || {};
+  if(!qr.imageUrl && !qr.linkUrl){
+    el.textContent = "［ここにQRコード・URLを貼り付け］";
+    return;
+  }
+  let html = "";
+  if(qr.imageUrl) html += `<img src="${escapeHtml(qr.imageUrl)}" alt="QRコード" style="max-width:100%;border-radius:8px;margin-bottom:8px;">`;
+  if(qr.linkUrl) html += `<a href="${escapeHtml(qr.linkUrl)}" target="_blank" rel="noopener" style="color:#fff;font-weight:700;text-decoration:underline;">${escapeHtml(qr.linkText || qr.linkUrl)}</a>`;
+  el.innerHTML = html;
+}
+
+let current = 0;
+let riasec = {};
+let sequence = [];
+
+// 診断（RIASEC採点）とは無関係な「ボーナス質問」を、指定された位置に挟み込んだ
+// 出題順を組み立てる。afterQuestion:0 = 最初の質問より前、N = 元のN問目の直後。
+// スコアには一切影響しない（answer()ではなくadvance()だけを呼ぶ）。
+function buildSequence(){
+  const seq = [];
+  const byPosition = {};
+  (CONFIG.bonusQuestions||[]).forEach(bq=>{
+    const pos = Math.max(0, Math.min(CONFIG.questions.length, Number(bq.afterQuestion)||0));
+    (byPosition[pos] = byPosition[pos] || []).push(bq);
+  });
+  (byPosition[0]||[]).forEach(bq=> seq.push({ type:"bonus", data:bq }));
+  CONFIG.questions.forEach((q, idx)=>{
+    seq.push({ type:"real", data:q });
+    (byPosition[idx+1]||[]).forEach(bq=> seq.push({ type:"bonus", data:bq }));
+  });
+  return seq;
+}
+
+function startQuiz(){
+  current = 0;
+  riasec = {}; RIASEC_LETTERS.forEach(l=> riasec[l]=0);
+  sequence = buildSequence();
+  document.getElementById("screen-start").classList.add("hidden");
+  document.getElementById("screen-result").classList.add("hidden");
+  document.getElementById("screen-quiz").classList.remove("hidden");
+  renderQuestion();
+}
+
+function renderQuestion(){
+  const item = sequence[current];
+  document.getElementById("qnum").textContent = "Q" + (current+1) + " / " + sequence.length;
+  document.getElementById("progressBar").style.width = ((current)/sequence.length*100) + "%";
+  const choicesEl = document.getElementById("choices");
+  choicesEl.innerHTML = "";
+
+  if(item.type === "bonus"){
+    document.getElementById("qtext").textContent = item.data.q;
+    (item.data.opts||[]).forEach(text=>{
+      const btn = document.createElement("div");
+      btn.className = "choice";
+      btn.textContent = text;
+      btn.onclick = ()=> advance();
+      choicesEl.appendChild(btn);
+    });
+    return;
+  }
+
+  const q = item.data;
+  document.getElementById("qtext").textContent = q.q;
+  q.opts.forEach((text, i)=>{
+    const letter = RIASEC_LETTERS[i];
+    const btn = document.createElement("div");
+    btn.className = "choice";
+    btn.textContent = text;
+    btn.onclick = ()=> answer(letter);
+    choicesEl.appendChild(btn);
+  });
+}
+
+function advance(){
+  current++;
+  if(current >= sequence.length){
+    showResult();
+  } else {
+    renderQuestion();
+  }
+}
+
+function answer(letter){
+  riasec[letter]++;
+  advance();
+}
+
+function toEmbeddableVideoUrl(url){
+  const yt = url.match(/(?:youtu\.be\/|youtube\.com\/watch\?v=|youtube\.com\/embed\/)([\w-]{6,})/);
+  if(yt) return "https://www.youtube.com/embed/" + yt[1];
+  return null;
+}
+
+function showResult(){
+  document.getElementById("progressBar").style.width = "100%";
+
+  // コース別スコア = 回答者のRIASEC得点 × 各コースの重み の内積
+  const courseScore = {};
+  CONFIG.courses.forEach(c=>{
+    let s = 0;
+    RIASEC_LETTERS.forEach(letter=>{ s += (riasec[letter]||0) * (c.weights[letter]||0); });
+    courseScore[c.key] = s;
+  });
+
+  let best = CONFIG.courses[0];
+  CONFIG.courses.forEach(c=>{ if(courseScore[c.key] > courseScore[best.key]) best = c; });
+
+  // フレーバー軸：E+S(対人・行動力寄り) vs C+I(分析・秩序寄り)
+  const hotScore = (riasec.E||0) + (riasec.S||0);
+  const coolScore = (riasec.C||0) + (riasec.I||0);
+  const style = hotScore >= coolScore ? "hot" : "cool";
+  const t = best[style];
+
+  const iconEl = document.getElementById("resultIcon");
+  if(t.imageUrl){
+    iconEl.innerHTML = `<img src="${escapeHtml(t.imageUrl)}" alt="${escapeHtml(t.name||'')}">`;
+  } else {
+    iconEl.textContent = t.icon;
+  }
+  document.getElementById("resultType").textContent = t.name;
+  document.getElementById("resultQuote").textContent = t.quote;
+  document.getElementById("resultCourseTag").textContent = "おすすめ: " + best.label + "コース";
+  document.getElementById("resultDesc").textContent = t.desc;
+  document.getElementById("resultCourseDesc").textContent = best.desc;
+
+  // 適性%グラフ：コーススコア ÷ (そのコースの最大重み × 設問数) を基本に、5〜99%でクリップ
+  const ranked = [...CONFIG.courses].sort((x,y)=> courseScore[y.key]-courseScore[x.key]);
+  const chartEl = document.getElementById("chartRows");
+  chartEl.innerHTML = "";
+  ranked.forEach(c=>{
+    const maxWeight = Math.max(1, ...RIASEC_LETTERS.map(l=> c.weights[l]||0));
+    const maxPossible = maxWeight * CONFIG.questions.length;
+    const pct = Math.min(99, Math.max(5, Math.round(courseScore[c.key]/maxPossible*100)));
+    const row = document.createElement("div");
+    row.className = "chart-row" + (c.key===best.key ? " top" : "");
+    row.innerHTML = `
+      <div class="chart-labels"><span>${escapeHtml(c.label)}</span><span class="pct">${pct}%</span></div>
+      <div class="chart-track"><div class="chart-fill" style="width:${pct}%"></div></div>`;
+    chartEl.appendChild(row);
+  });
+
+  // 先輩作品ギャラリー
+  const galEl = document.getElementById("galleryScroll");
+  galEl.innerHTML = "";
+  (best.gallery||[]).forEach(item=>{
+    const card = document.createElement("div");
+    card.className = "gallery-card";
+    let mediaHtml;
+    if(item.mediaType === "image" && item.mediaUrl){
+      mediaHtml = `<img src="${escapeHtml(item.mediaUrl)}" alt="${escapeHtml(item.title||'')}" style="width:100%;height:100%;object-fit:cover;">`;
+    } else if(item.mediaType === "video" && item.mediaUrl){
+      const embed = toEmbeddableVideoUrl(item.mediaUrl);
+      mediaHtml = embed
+        ? `<iframe src="${escapeHtml(embed)}" style="width:100%;height:100%;border:0;" allowfullscreen></iframe>`
+        : `<video src="${escapeHtml(item.mediaUrl)}" controls style="width:100%;height:100%;object-fit:cover;"></video>`;
+    } else {
+      mediaHtml = escapeHtml(item.icon || "🎬");
+    }
+    card.innerHTML = `
+      <div class="gallery-media">${mediaHtml}<span class="gallery-kind">${escapeHtml(item.kind||"")}</span></div>
+      <div class="gallery-body">
+        <p class="gallery-title">${escapeHtml(item.title||"")}</p>
+        <p class="gallery-caption">${escapeHtml(item.caption||"")}</p>
+      </div>`;
+    galEl.appendChild(card);
+  });
+
+  document.getElementById("screen-quiz").classList.add("hidden");
+  document.getElementById("screen-result").classList.remove("hidden");
+}
+
+function scrollGallery(dir){
+  const el = document.getElementById("galleryScroll");
+  el.scrollBy({ left: dir * el.clientWidth * 0.8, behavior:"smooth" });
+}
+
+function restartQuiz(){
+  document.getElementById("screen-quiz").classList.add("hidden");
+  document.getElementById("screen-result").classList.add("hidden");
+  document.getElementById("screen-start").classList.remove("hidden");
+}
+
+applyStaticUi();
+</script>
+</body>
+</html>

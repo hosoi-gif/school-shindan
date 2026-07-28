@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>スクール診断 | 会場設定画面</title>
+<link rel="stylesheet" href="/shared.css">
+</head>
+<body>
+
+<div id="gate">
+  <div class="gate-card">
+    <p style="font-weight:700;">会場設定画面</p>
+    <p class="hint">パスワードを入力してください</p>
+    <input type="password" id="pwInput" placeholder="パスワード">
+    <button class="action-btn" style="width:100%;" onclick="checkPassword()">開く</button>
+  </div>
+</div>
+
+<div class="wrap hidden" id="appRoot">
+  <h1>会場設定画面</h1>
+  <p class="subtitle">会場を作成すると、その会場専用の「設定URL」が発行される。そのURLを会場担当スタッフに渡すと、この管理画面のパスワードを教えなくても、その会場のボーナス質問設定と参加者URLの発行だけができる。</p>
+
+  <div class="panel">
+    <h2>新しい会場を追加</h2>
+    <label>会場名</label>
+    <input type="text" id="newVenueName" placeholder="例：体育館、教室A など">
+    <button class="action-btn" style="margin-top:10px;" onclick="createVenue()">＋ 会場を追加</button>
+  </div>
+
+  <div class="panel">
+    <h2>会場一覧（全<span id="vCount"></span>会場）</h2>
+    <div id="venuesList"></div>
+  </div>
+
+  <div class="actions-bar">
+    <a href="/admin"><button class="action-btn secondary" type="button">← 最上位管理画面へ戻る</button></a>
+  </div>
+</div>
+
+<script src="/admin/auth.js"></script>
+<script src="/admin/venues.js"></script>
+</body>
+</html>
