@@ -94,6 +94,14 @@ function startQuiz(){
   renderQuestion();
 }
 
+function shuffleArray(arr){
+  for(let i = arr.length - 1; i > 0; i--){
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
+
 function renderQuestion(){
   const item = sequence[current];
   document.getElementById("qnum").textContent = "Q" + (current+1) + " / " + sequence.length;
@@ -103,7 +111,7 @@ function renderQuestion(){
 
   if(item.type === "bonus"){
     document.getElementById("qtext").textContent = item.data.q;
-    (item.data.opts||[]).forEach(text=>{
+    shuffleArray([...(item.data.opts||[])]).forEach(text=>{
       const btn = document.createElement("div");
       btn.className = "choice";
       btn.textContent = text;
@@ -115,8 +123,11 @@ function renderQuestion(){
 
   const q = item.data;
   document.getElementById("qtext").textContent = q.q;
-  q.opts.forEach((text, i)=>{
-    const letter = RIASEC_LETTERS[i];
+  // 選択肢はRIASECの順(R,I,A,S,E,C)ではなく、表示のたびにランダムな順番で出す。
+  // 「常に同じ位置＝同じタイプ」というパターンで機械的に選ばれてしまうのを防ぐため。
+  // どの位置に来ても、クリック時に元のletterで正しく採点される。
+  const pairs = shuffleArray(q.opts.map((text, i) => ({ text, letter: RIASEC_LETTERS[i] })));
+  pairs.forEach(({text, letter})=>{
     const btn = document.createElement("div");
     btn.className = "choice";
     btn.textContent = text;
