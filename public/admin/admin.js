@@ -34,25 +34,64 @@ document.getElementById('appRoot').addEventListener('input', onFieldChange);
 document.getElementById('appRoot').addEventListener('change', onFieldChange);
 
 // ---------- 質問セクション ----------
+let draggedQuestionRef = null;
+
 function renderQuestions(){
   document.getElementById('qCount').textContent = config.questions.length;
   const list = document.getElementById('questionsList');
   list.innerHTML = config.questions.map((q, i)=>`
-    <details open>
-      <summary>Q${i+1}. ${escapeHtmlForDisplay(q.q || '(未入力)')}</summary>
-      <label>質問文</label>
-      <textarea data-path="questions.${i}.q"></textarea>
-      <div class="opt-list">
-        ${LETTERS.map((L, li)=>`
-          <div class="opt-row">
-            <div class="opt-label">${LETTER_LABELS[L]}</div>
-            <input type="text" data-path="questions.${i}.opts.${li}">
-          </div>`).join('')}
-      </div>
-      <button class="action-btn danger" style="margin-top:10px;" onclick="removeQuestion(${i})">この質問を削除</button>
-    </details>
-  `).join('');
+    <div class="qcard" draggable="true"
+         ondragstart="onQuestionDragStart(event,${i})"
+         ondragover="onDragOverAllow(event)"
+         ondrop="onQuestionDrop(event,${i})"
+         ondragend="onDragEndCleanup(event)">
+      <details open>
+        <summary><span class="drag-handle">⠿</span> Q${i+1}. ${escapeHtmlForDisplay(q.q || '(未入力)')}</summary>
+        <label>質問文</label>
+        <textarea data-path="questions.${i}.q"></textarea>
+        <div class="opt-list">
+          ${LETTERS.map((L, li)=>`
+            <div class="opt-row">
+              <div class="opt-label">${LETTER_LABELS[L]}</div>
+              <input type="text" data-path="questions.${i}.opts.${li}">
+            </div>`).join('')}
+        </div>
+        <button class="action-btn danger" style="margin-top:10px;" onclick="removeQuestion(${i})">この質問を削除</button>
+      </details>
+    </div>
+  `).join('') + `
+    <div class="drop-end" ondragover="onDragOverAllow(event)" ondrop="onQuestionDropAtEnd(event)">ここにドラッグすると一番最後に移動</div>
+  `;
   bindInputs(list);
+}
+
+function onDragOverAllow(e){ e.preventDefault(); }
+function onDragEndCleanup(){ draggedQuestionRef = null; }
+
+function onQuestionDragStart(e, i){
+  draggedQuestionRef = config.questions[i];
+  e.dataTransfer.effectAllowed = 'move';
+}
+function onQuestionDrop(e, i){
+  e.preventDefault();
+  if(!draggedQuestionRef) return;
+  const targetRef = config.questions[i];
+  if(targetRef === draggedQuestionRef) return;
+  const filtered = config.questions.filter(q => q !== draggedQuestionRef);
+  const insertAt = filtered.indexOf(targetRef);
+  filtered.splice(insertAt, 0, draggedQuestionRef);
+  config.questions = filtered;
+  draggedQuestionRef = null;
+  renderQuestions();
+}
+function onQuestionDropAtEnd(e){
+  e.preventDefault();
+  if(!draggedQuestionRef) return;
+  const filtered = config.questions.filter(q => q !== draggedQuestionRef);
+  filtered.push(draggedQuestionRef);
+  config.questions = filtered;
+  draggedQuestionRef = null;
+  renderQuestions();
 }
 function addQuestion(){
   config.questions.push({ q:"", opts:["","","","","",""] });
