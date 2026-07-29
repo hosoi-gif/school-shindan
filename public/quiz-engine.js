@@ -177,14 +177,14 @@ function showResult(){
   document.getElementById("resultDesc").textContent = t.desc;
   document.getElementById("resultCourseDesc").textContent = best.desc;
 
-  // 適性%グラフ：コーススコア ÷ (そのコースの最大重み × 設問数) を基本に、5〜99%でクリップ
+  // 適性%グラフ：理論上の満点ではなく「今回の回答での最高得点」を基準に正規化。
+  // 一番近いコースが常に説得力のある高い%で表示され、他のコースはその相対差で決まる。15〜99%でクリップ。
   const ranked = [...CONFIG.courses].sort((x,y)=> courseScore[y.key]-courseScore[x.key]);
+  const maxScore = Math.max(1, ...CONFIG.courses.map(c=> courseScore[c.key]));
   const chartEl = document.getElementById("chartRows");
   chartEl.innerHTML = "";
   ranked.forEach(c=>{
-    const maxWeight = Math.max(1, ...RIASEC_LETTERS.map(l=> c.weights[l]||0));
-    const maxPossible = maxWeight * CONFIG.questions.length;
-    const pct = Math.min(99, Math.max(5, Math.round(courseScore[c.key]/maxPossible*100)));
+    const pct = Math.min(99, Math.max(15, Math.round(courseScore[c.key]/maxScore*99)));
     const row = document.createElement("div");
     row.className = "chart-row" + (c.key===best.key ? " top" : "");
     row.innerHTML = `
